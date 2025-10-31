@@ -1,0 +1,143 @@
+.earthquake-list-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.list-header {
+    padding: 1.5rem;
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.list-header h1 {
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+    color: #212529;
+}
+
+.list-header p {
+    margin-bottom: 0.5rem;
+    color: #6c757d;
+}
+
+.content-row {
+    flex: 1;
+    overflow: hidden;
+}
+
+.info-panel {
+    background-color: #fff;
+    border-right: 1px solid #dee2e6;
+    overflow-y: auto;
+    max-height: calc(100vh - 150px);
+}
+
+.info-content {
+    padding: 1.5rem;
+}
+
+.earthquake-card {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1rem;
+}
+
+.earthquake-card .card-title {
+    color: #212529;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.info-row:last-of-type {
+    border-bottom: none;
+}
+
+.info-row strong {
+    color: #495057;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+    margin-right: 1rem;
+}
+
+.info-row span {
+    text-align: right;
+    font-size: 0.9rem;
+    color: #212529;
+}
+
+.magnitude-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    color: white;
+    font-weight: bold;
+}
+
+.map-panel {
+    position: relative;
+    height: calc(100vh - 150px);
+}
+
+.pagination-container {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.pagination {
+    margin-bottom: 0;
+}
+
+.earthquake-popup h6 {
+    margin-bottom: 0.5rem;
+    color: #212529;
+}
+
+.earthquake-popup p {
+    margin: 0.25rem 0;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 991px) {
+    .content-row {
+        flex-direction: column;
+    }
+
+    .info-panel {
+        max-height: 400px;
+        border-right: none;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .map-panel {
+        height: 400px;
+    }
+}
+
+@media (max-width: 576px) {
+    .list-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .info-content {
+        padding: 1rem;
+    }
+
+    .info-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .info-row span {
+        text-align: left;
+        margin-top: 0.25rem;
+    }
+}
