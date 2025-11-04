@@ -28,6 +28,12 @@ const useEarthquakeStore = create((set, get) => ({
     updatedFromSocket: false,
     socketListenersCount: 0,
 
+    // Estado para escenarios
+    escenarios: [],
+    escenariosOld: [],
+    escenariosLoading: false,
+    escenariosError: null,
+
     // Función para cargar los terremotos desde la API
     fetchEarthquakes: async (fromSocket = false) => {
         set({ loading: true, error: null });
@@ -50,6 +56,38 @@ const useEarthquakeStore = create((set, get) => ({
                 loading: false
             });
             console.error('Error fetching earthquake data:', err);
+        }
+    },
+
+    // Función para cargar los escenarios desde la API
+    fetchEscenarios: async () => {
+        set({ escenariosLoading: true, escenariosError: null });
+        try {
+            // Fetch de ambas APIs en paralelo
+            const [responseNew, responseOld] = await Promise.all([
+                fetch('http://localhost:4000/api/escenarios'),
+                fetch('http://localhost:4000/api/escenarios/old')
+            ]);
+
+            if (!responseNew.ok || !responseOld.ok) {
+                throw new Error('Error en la respuesta del servidor');
+            }
+
+            const dataNew = await responseNew.json();
+            const dataOld = await responseOld.json();
+
+            set({
+                escenarios: Array.isArray(dataNew) ? dataNew : [],
+                escenariosOld: Array.isArray(dataOld) ? dataOld : [],
+                escenariosLoading: false,
+                escenariosError: null
+            });
+        } catch (err) {
+            set({
+                escenariosError: 'Error al cargar los escenarios. Verifica que el servidor local esté corriendo.',
+                escenariosLoading: false
+            });
+            console.error('Error fetching escenarios data:', err);
         }
     },
 

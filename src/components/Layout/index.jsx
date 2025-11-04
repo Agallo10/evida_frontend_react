@@ -1,13 +1,26 @@
 import { useState } from 'react';
-import { Link, Outlet } from 'react-router-dom';
+import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Nav, Button } from 'react-bootstrap';
 import './Layout.css';
 
 function Layout() {
     const [collapsed, setCollapsed] = useState(false);
+    const navigate = useNavigate();
+
+    // Obtener información del usuario
+    const usuarioData = localStorage.getItem('usuario');
+    const usuario = usuarioData ? JSON.parse(usuarioData) : null;
 
     const toggleSidebar = () => {
         setCollapsed(!collapsed);
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem('isAuthenticated');
+        localStorage.removeItem('token');
+        localStorage.removeItem('usuario');
+        localStorage.removeItem('username');
+        navigate('/login');
     };
 
     return (
@@ -21,7 +34,7 @@ function Layout() {
                     className={`sidebar bg-dark ${collapsed ? 'collapsed' : ''}`}
                 >
                     <div className="sidebar-header p-3 text-white d-flex justify-content-between align-items-center">
-                        {!collapsed && <h4 className="mb-0">Mi Aplicación</h4>}
+                        {!collapsed && <h4 className="mb-0">EVIDA - DIMAR</h4>}
                         <Button
                             variant="outline-light"
                             size="sm"
@@ -31,6 +44,24 @@ function Layout() {
                             <i className={`bi bi-${collapsed ? 'chevron-right' : 'chevron-left'}`}></i>
                         </Button>
                     </div>
+
+                    {/* Info del usuario */}
+                    {!collapsed && usuario && (
+                        <div className="p-3 text-white" style={{
+                            fontSize: '0.85rem',
+                            borderBottom: '1px solid rgba(255,255,255,0.1)',
+                            backgroundColor: 'rgba(255,255,255,0.05)'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <i className="bi bi-person-circle" style={{ fontSize: '1.2rem' }}></i>
+                                <div>
+                                    <div style={{ fontWeight: '600' }}>{usuario.nombre}</div>
+                                    <div style={{ fontSize: '0.75rem', opacity: '0.8' }}>@{usuario.user}</div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <Nav className="flex-column">
                         <Nav.Link as={Link} to="/" className="text-white sidebar-link" title="Inicio">
                             <i className="bi bi-house-door-fill"></i>
@@ -48,9 +79,39 @@ function Layout() {
                             <i className="bi bi-list-ul"></i>
                             {!collapsed && <span className="ms-2">Lista de Terremotos</span>}
                         </Nav.Link>
+                        <Nav.Link as={Link} to="/escenarios" className="text-white sidebar-link" title="Escenarios">
+                            <i className="bi bi-pin-map-fill"></i>
+                            {!collapsed && <span className="ms-2">Escenarios</span>}
+                        </Nav.Link>
+                        <Nav.Link as={Link} to="/entidades" className="text-white sidebar-link" title="Entidades">
+                            <i className="bi bi-building"></i>
+                            {!collapsed && <span className="ms-2">Entidades</span>}
+                        </Nav.Link>
+                        <Nav.Link as={Link} to="/contactos" className="text-white sidebar-link" title="Contactos">
+                            <i className="bi bi-person-lines-fill"></i>
+                            {!collapsed && <span className="ms-2">Contactos</span>}
+                        </Nav.Link>
+                        <Nav.Link as={Link} to="/correos" className="text-white sidebar-link" title="Correos">
+                            <i className="bi bi-envelope-fill"></i>
+                            {!collapsed && <span className="ms-2">Correos</span>}
+                        </Nav.Link>
                         <Nav.Link as={Link} to="/socket-test" className="text-white sidebar-link" title="Test Socket">
                             <i className="bi bi-plug-fill"></i>
                             {!collapsed && <span className="ms-2">Test Socket</span>}
+                        </Nav.Link>
+
+                        {/* Separador */}
+                        <hr className="my-3" style={{ borderColor: 'rgba(255,255,255,0.2)' }} />
+
+                        {/* Botón de cerrar sesión */}
+                        <Nav.Link
+                            onClick={handleLogout}
+                            className="text-white sidebar-link"
+                            title="Cerrar Sesión"
+                            style={{ cursor: 'pointer' }}
+                        >
+                            <i className="bi bi-box-arrow-right"></i>
+                            {!collapsed && <span className="ms-2">Cerrar Sesión</span>}
                         </Nav.Link>
                     </Nav>
                 </Col>
