@@ -226,9 +226,9 @@ function Correos() {
                                             </div>
                                         </td>
                                         <td>
-                                            <div 
+                                            <div
                                                 className="email-contenido"
-                                                dangerouslySetInnerHTML={{ 
+                                                dangerouslySetInnerHTML={{
                                                     __html: correo.contenido.replace(/<[^>]*>/g, '').substring(0, 100) + '...'
                                                 }}
                                             />
@@ -284,7 +284,7 @@ function Correos() {
                             </div>
                             <div className="mb-3">
                                 <strong>Contenido:</strong>
-                                <div 
+                                <div
                                     className="email-full-content mt-2"
                                     dangerouslySetInnerHTML={{ __html: selectedCorreo.contenido }}
                                 />
