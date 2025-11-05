@@ -212,7 +212,7 @@ function Entidades() {
             </div>
 
             {/* Estadísticas */}
-            <div className="stats-cards">
+            {/* <div className="stats-cards">
                 <div className="stat-card">
                     <div className="stat-icon primary">
                         <i className="bi bi-building"></i>
@@ -231,7 +231,7 @@ function Entidades() {
                         <p>Resultados Filtrados</p>
                     </div>
                 </div>
-            </div>
+            </div> */}
 
             {/* Acciones */}
             <div className="entidades-actions">

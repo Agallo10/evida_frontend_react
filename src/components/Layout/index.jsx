@@ -5,6 +5,7 @@ import './Layout.css';
 
 function Layout() {
     const [collapsed, setCollapsed] = useState(false);
+    const [boletinesOpen, setBoletinesOpen] = useState(false);
     const navigate = useNavigate();
 
     // Obtener información del usuario
@@ -83,18 +84,42 @@ function Layout() {
                             <i className="bi bi-pin-map-fill"></i>
                             {!collapsed && <span className="ms-2">Escenarios</span>}
                         </Nav.Link>
-                        <Nav.Link as={Link} to="/entidades" className="text-white sidebar-link" title="Entidades">
-                            <i className="bi bi-building"></i>
-                            {!collapsed && <span className="ms-2">Entidades</span>}
-                        </Nav.Link>
-                        <Nav.Link as={Link} to="/contactos" className="text-white sidebar-link" title="Contactos">
-                            <i className="bi bi-person-lines-fill"></i>
-                            {!collapsed && <span className="ms-2">Contactos</span>}
-                        </Nav.Link>
-                        <Nav.Link as={Link} to="/correos" className="text-white sidebar-link" title="Correos">
-                            <i className="bi bi-envelope-fill"></i>
-                            {!collapsed && <span className="ms-2">Correos</span>}
-                        </Nav.Link>
+
+                        {/* Menú Boletines con Submenús */}
+                        <div className="sidebar-submenu">
+                            <Nav.Link
+                                onClick={() => !collapsed && setBoletinesOpen(!boletinesOpen)}
+                                className="text-white sidebar-link"
+                                title="Boletines"
+                                style={{ cursor: 'pointer' }}
+                            >
+                                <i className="bi bi-file-earmark-text-fill"></i>
+                                {!collapsed && (
+                                    <>
+                                        <span className="ms-2">Boletines</span>
+                                        <i className={`bi bi-chevron-${boletinesOpen ? 'down' : 'right'} ms-auto`}></i>
+                                    </>
+                                )}
+                            </Nav.Link>
+
+                            {!collapsed && boletinesOpen && (
+                                <div className="submenu-items">
+                                    <Nav.Link as={Link} to="/correos" className="text-white sidebar-sublink" title="Correos">
+                                        <i className="bi bi-envelope-fill"></i>
+                                        <span className="ms-2">Correos</span>
+                                    </Nav.Link>
+                                    <Nav.Link as={Link} to="/entidades" className="text-white sidebar-sublink" title="Entidades">
+                                        <i className="bi bi-building"></i>
+                                        <span className="ms-2">Entidades</span>
+                                    </Nav.Link>
+                                    <Nav.Link as={Link} to="/contactos" className="text-white sidebar-sublink" title="Contactos">
+                                        <i className="bi bi-person-lines-fill"></i>
+                                        <span className="ms-2">Contactos</span>
+                                    </Nav.Link>
+                                </div>
+                            )}
+                        </div>
+
                         <Nav.Link as={Link} to="/socket-test" className="text-white sidebar-link" title="Test Socket">
                             <i className="bi bi-plug-fill"></i>
                             {!collapsed && <span className="ms-2">Test Socket</span>}

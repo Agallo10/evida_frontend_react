@@ -244,7 +244,7 @@ function Contactos() {
             </div>
 
             {/* Estadísticas */}
-            <div className="stats-cards">
+            {/* <div className="stats-cards">
                 <div className="stat-card">
                     <div className="stat-icon primary">
                         <i className="bi bi-person-lines-fill"></i>
@@ -263,7 +263,7 @@ function Contactos() {
                         <p>Resultados Filtrados</p>
                     </div>
                 </div>
-            </div>
+            </div> */}
 
             {/* Acciones */}
             <div className="contactos-actions">

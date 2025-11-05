@@ -11,13 +11,19 @@ function Correos() {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterTipo, setFilterTipo] = useState('TODOS');
 
+    // Paginación
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalCorreos, setTotalCorreos] = useState(0);
+    const [itemsPerPage] = useState(5);
+    const totalPages = Math.ceil(totalCorreos / itemsPerPage);
+
     // Modal para ver el contenido completo del correo
     const [showModal, setShowModal] = useState(false);
     const [selectedCorreo, setSelectedCorreo] = useState(null);
 
     useEffect(() => {
-        fetchCorreos();
-    }, []);
+        fetchCorreos(currentPage);
+    }, [currentPage]);
 
     useEffect(() => {
         // Filtrar correos cuando cambia el término de búsqueda o el filtro de tipo
@@ -40,20 +46,24 @@ function Correos() {
         setFilteredCorreos(filtered);
     }, [searchTerm, filterTipo, correos]);
 
-    const fetchCorreos = async () => {
+    const fetchCorreos = async (page = 1) => {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetchWithAuth('http://localhost:4000/api/correos');
+            // Calcular el offset (desde) basado en la página actual
+            const desde = (page - 1) * itemsPerPage;
+            const response = await fetchWithAuth(`http://localhost:4000/api/correos?limite=${itemsPerPage}&desde=${desde}`);
 
             if (!response.ok) {
                 throw new Error('Error al cargar los correos');
             }
 
             const data = await response.json();
-            const correosArray = Array.isArray(data) ? data : [];
+            const correosArray = Array.isArray(data.correos) ? data.correos : [];
             setCorreos(correosArray);
             setFilteredCorreos(correosArray);
+            setTotalCorreos(data.total || 0);
+            setCurrentPage(page);
         } catch (err) {
             setError('Error al cargar los correos. Verifique que el servidor esté corriendo.');
             console.error('Error fetching correos:', err);
@@ -90,13 +100,13 @@ function Correos() {
             </div>
 
             {/* Estadísticas */}
-            <div className="stats-cards">
+            {/* <div className="stats-cards">
                 <div className="stat-card">
                     <div className="stat-icon">
                         <i className="bi bi-envelope-fill"></i>
                     </div>
                     <div className="stat-content">
-                        <h3>{correos.length}</h3>
+                        <h3>{totalCorreos}</h3>
                         <p>Total Correos</p>
                     </div>
                 </div>
@@ -109,7 +119,7 @@ function Correos() {
                         <p>Resultados Filtrados</p>
                     </div>
                 </div>
-            </div>
+            </div> */}
 
             {/* Acciones y Filtros */}
             <div className="correos-actions">
@@ -248,6 +258,64 @@ function Correos() {
                                 ))}
                             </tbody>
                         </Table>
+                    </div>
+                )}
+
+                {/* Paginación */}
+                {!loading && !error && totalPages > 1 && (
+                    <div className="pagination-container">
+                        <div className="pagination-info">
+                            <i className="bi bi-info-circle me-2"></i>
+                            Mostrando <strong>{((currentPage - 1) * itemsPerPage) + 1}</strong> - <strong>{Math.min(currentPage * itemsPerPage, totalCorreos)}</strong> de <strong>{totalCorreos}</strong> correos
+                        </div>
+                        <div className="pagination-controls">
+                            <Button
+                                variant="outline-primary"
+                                size="sm"
+                                disabled={currentPage === 1}
+                                onClick={() => setCurrentPage(currentPage - 1)}
+                            >
+                                <i className="bi bi-chevron-left me-1"></i>
+                                Anterior
+                            </Button>
+
+                            {/* Números de página */}
+                            <div className="page-numbers">
+                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                    let pageNum;
+                                    if (totalPages <= 5) {
+                                        pageNum = i + 1;
+                                    } else if (currentPage <= 3) {
+                                        pageNum = i + 1;
+                                    } else if (currentPage >= totalPages - 2) {
+                                        pageNum = totalPages - 4 + i;
+                                    } else {
+                                        pageNum = currentPage - 2 + i;
+                                    }
+
+                                    return (
+                                        <Button
+                                            key={pageNum}
+                                            variant={currentPage === pageNum ? "primary" : "outline-primary"}
+                                            size="sm"
+                                            onClick={() => setCurrentPage(pageNum)}
+                                        >
+                                            {pageNum}
+                                        </Button>
+                                    );
+                                })}
+                            </div>
+
+                            <Button
+                                variant="outline-primary"
+                                size="sm"
+                                disabled={currentPage === totalPages}
+                                onClick={() => setCurrentPage(currentPage + 1)}
+                            >
+                                Siguiente
+                                <i className="bi bi-chevron-right ms-1"></i>
+                            </Button>
+                        </div>
                     </div>
                 )}
             </div>
