@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import About from './pages/About';
 import EarthquakeMap from './pages/EarthquakeMap';
 import EarthquakeList from './pages/EarthquakeList';
+import PruebaSismo from './pages/PruebaSismo';
 import Escenarios from './pages/Escenarios';
 import Entidades from './pages/Entidades';
 import Contactos from './pages/Contactos';
@@ -36,6 +37,7 @@ function App() {
           <Route path="about" element={<About />} />
           <Route path="earthquake-map" element={<EarthquakeMap />} />
           <Route path="earthquake-list" element={<EarthquakeList />} />
+          <Route path="prueba-sismo" element={<PruebaSismo />} />
           <Route path="escenarios" element={<Escenarios />} />
           <Route path="entidades" element={<Entidades />} />
           <Route path="contactos" element={<Contactos />} />

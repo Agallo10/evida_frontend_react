@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polygon, useMap, Polyline } from 'react-leaflet';
-import { Container, Row, Col, Card, Spinner, Alert, Badge, Pagination, Toast, ToastContainer, Form } from 'react-bootstrap';
+import { Container, Row, Col, Card, Spinner, Alert, Badge, Button, Toast, ToastContainer, Form } from 'react-bootstrap';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import useEarthquakeStore from '../../store/earthquakeStore';
 import datosLC from '../../docs/datosLC.json';
 import * as TileLayers from '../../TileLayers';
 import FloatingLocalidadesCard from '../../components/FloatingLocalidadesCard';
-import './EarthquakeList.css';
+import './PruebaSismo.css';
 
 // Fix para los iconos de Leaflet en producción
 delete L.Icon.Default.prototype._getIconUrl;
@@ -27,6 +26,7 @@ const earthquakeIcon = new L.Icon({
     shadowSize: [49, 47],
     shadowAnchor: [3, 47]
 });
+
 const escenarioIcon = new L.Icon({
     iconUrl: '/Escenario.png',
     shadowUrl: '/shadow.png',
@@ -37,34 +37,58 @@ const escenarioIcon = new L.Icon({
     shadowAnchor: [3, 47]
 });
 
-// Componente para centrar el mapa cuando cambia el terremoto
+// Componente para centrar el mapa cuando cambia la ubicación
 function MapController({ center, zoom }) {
     const map = useMap();
 
     useEffect(() => {
         if (center) {
-            map.flyTo(center, zoom, {
-                duration: 1.5
-            });
+            map.setView(center, zoom);
         }
     }, [center, zoom, map]);
 
     return null;
 }
 
-function EarthquakeList() {
-    // Estado del store de Zustand
-    const { earthquakes, loading, error, isConnected, updatedFromSocket, fetchEarthquakes, initializeSocket, disconnectSocket, resetSocketUpdateFlag } = useEarthquakeStore();
+// Componente para manejar clicks en el mapa
+function MapClickHandler({ onMapClick }) {
+    const map = useMap();
 
-    // Estado local para la paginación y el mapa
-    const [currentPage, setCurrentPage] = useState(0);
+    useEffect(() => {
+        const handleClick = (e) => {
+            onMapClick(e.latlng);
+        };
+
+        map.on('click', handleClick);
+
+        return () => {
+            map.off('click', handleClick);
+        };
+    }, [map, onMapClick]);
+
+    return null;
+}
+
+function PruebaSismo() {
+    // Estado local para el formulario
+    const [formData, setFormData] = useState({
+        magnitud: 8,
+        latitud: 2,
+        longitud: -80,
+        profundidad: 10,
+        boletin: false
+    });
+
+    // Estado para el mapa y simulación
     const [mapCenter, setMapCenter] = useState([4.5709, -74.2973]); // Centro de Colombia por defecto
     const [mapZoom, setMapZoom] = useState(6);
-    const [showToast, setShowToast] = useState(false);
-    const [showLoadingToast, setShowLoadingToast] = useState(false);
     const [selectedLayer, setSelectedLayer] = useState('Esri_WorldImagery');
-    const [escenario, setEscenario] = useState(null); // Estado para almacenar el escenario de simulación
-    const [alturaData, setAlturaData] = useState(null); // Estado para almacenar datos de altura
+    const [escenario, setEscenario] = useState(null);
+    const [alturaData, setAlturaData] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [showToast, setShowToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState('');
+    const [toastVariant, setToastVariant] = useState('success');
 
     // Opciones de capas disponibles
     const layerOptions = {
@@ -76,141 +100,133 @@ function EarthquakeList() {
         'Esri_WorldStreetMap': { name: 'Calles (Esri)', layer: TileLayers.Esri_WorldStreetMap }
     };
 
-    useEffect(() => {
-        // Inicializar socket y cargar datos al montar el componente
-        initializeSocket();
+    const handleInputChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : (value === '' ? '' : parseFloat(value))
+        }));
+    };
 
-        // Mostrar toast de carga
-        setShowLoadingToast(true);
+    const handleMapClick = (latlng) => {
+        setFormData(prev => ({
+            ...prev,
+            latitud: parseFloat(latlng.lat.toFixed(4)),
+            longitud: parseFloat(latlng.lng.toFixed(4))
+        }));
+        setMapCenter([latlng.lat, latlng.lng]);
+    };
 
-        fetchEarthquakes();
+    const handleSubmit = async (e) => {
+        e.preventDefault();
 
-        // Cleanup al desmontar
-        return () => {
-            disconnectSocket();
-        };
-    }, [initializeSocket, fetchEarthquakes, disconnectSocket]);
-
-    // Ocultar toast de carga cuando termina de cargar
-    useEffect(() => {
-        if (!loading && showLoadingToast) {
-            setShowLoadingToast(false);
-        }
-    }, [loading, showLoadingToast]);
-
-    // Actualizar el centro del mapa cuando se cargan los datos
-    useEffect(() => {
-        if (earthquakes.length > 0 && currentPage === 0) {
-            setMapCenter([earthquakes[0].latitud, earthquakes[0].longitud]);
-            setMapZoom(6);
-        }
-    }, [earthquakes]);
-
-    // Definir el terremoto actual antes de usarlo
-    const totalPages = earthquakes.length;
-    const currentEarthquake = earthquakes[currentPage];
-
-    // Detectar cuando se actualizan los sismos desde el socket
-    useEffect(() => {
-        if (updatedFromSocket) {
-            // Resetear a la primera página
-            setCurrentPage(0);
-
-            // Actualizar el centro del mapa al primer sismo
-            if (earthquakes.length > 0) {
-                setMapCenter([earthquakes[0].latitud, earthquakes[0].longitud]);
-                setMapZoom(6);
-            }
-
-            // Mostrar notificación
+        // Validar que todos los campos numéricos tengan valores válidos
+        if (
+            formData.magnitud === '' || isNaN(formData.magnitud) ||
+            formData.latitud === '' || isNaN(formData.latitud) ||
+            formData.longitud === '' || isNaN(formData.longitud) ||
+            formData.profundidad === '' || isNaN(formData.profundidad)
+        ) {
+            setToastMessage('⚠️ Por favor completa todos los campos con valores válidos');
+            setToastVariant('warning');
             setShowToast(true);
-
-            // Ocultar el toast después de 3 segundos
-            setTimeout(() => {
-                setShowToast(false);
-                resetSocketUpdateFlag();
-            }, 3000);
+            return;
         }
-    }, [updatedFromSocket, earthquakes, resetSocketUpdateFlag]);
 
-    // Ejecutar simulación cuando cambia el sismo actual
-    useEffect(() => {
-        const executeSimulation = async () => {
-            if (!currentEarthquake) return;
+        setLoading(true);
 
-            try {
-                const simulationData = {
-                    latitud: currentEarthquake.latitud,
-                    longitud: currentEarthquake.longitud || currentEarthquake.longitud,
-                    mag: currentEarthquake.magnitud,
-                    depth: currentEarthquake.profundidad,
-                    dip: currentEarthquake.dip || "15", // Valor por defecto si no existe
-                    sismoid: currentEarthquake.id,
-                    sismoFecha: currentEarthquake.localTime || currentEarthquake.time,
-                    sismooceano: currentEarthquake.oceano || "",
-                    oceanoregion: currentEarthquake.oceanoRegion || ""
-                };
-
-                console.log('🔍 Ejecutando simulación para sismo:', simulationData);
-
-                const response = await fetch('http://localhost:4000/api/findSimulacion', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(simulationData)
-                });
-
-                if (response.ok) {
-                    const result = await response.json();
-                    console.log('✅ Simulación completada:', result);
-
-                    // Almacenar el escenario de la respuesta
-                    if (result && result.idEscenario && result.latitud && result.longitud) {
-                        setEscenario(result);
-
-                        // Si hay simulaciones y no es old, hacer fetch de altura para el Pacífico
-                        if (!result.old && result.simulaciones && result.simulaciones.length > 0) {
-                            const pacificoLocalidad = result.simulaciones[0];
-                            fetchAlturaData(pacificoLocalidad, currentEarthquake);
-                        } else {
-                            setAlturaData(null);
-                        }
-                    } else {
-                        setEscenario(null);
-                        setAlturaData(null);
-                    }
-                } else {
-                    console.error('❌ Error en simulación:', response.statusText);
-                    setEscenario(null);
-                    setAlturaData(null);
-                }
-            } catch (error) {
-                console.error('❌ Error ejecutando simulación:', error);
-                setEscenario(null);
-                setAlturaData(null);
-            }
-        };
-
-        executeSimulation();
-    }, [currentPage, earthquakes]);
-
-    // Función para obtener datos de altura
-    const fetchAlturaData = async (localidad, earthquake) => {
         try {
-            // Forzar el parámetro localidad a "Pacifico" según especificación del curl
+            const payload = {
+                sismo: {
+                    magnitud: formData.magnitud,
+                    latitud: formData.latitud,
+                    longitud: formData.longitud,
+                    profundidad: formData.profundidad
+                },
+                boletin: formData.boletin
+            };
+
+            console.log('🔍 Ejecutando prueba de sismo:', payload);
+
+            const response = await fetch('http://localhost:4000/api/temblor/prueba-sismo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log('✅ Respuesta de prueba-sismo:', result);
+
+                setEscenario(result.escenarios);
+
+                // Centrar mapa en el sismo
+                setMapCenter([formData.latitud, formData.longitud]);
+                setMapZoom(7);
+
+                // Verificar si es estructura antigua
+                if (result.escenarios.old) {
+                    setToastMessage('⚠️ Escenario con estructura antigua detectado. No se mostrarán simulaciones detalladas.');
+                    setToastVariant('warning');
+                    setShowToast(true);
+                } else {
+                    // Si no es old y tiene simulaciones, obtener datos de altura
+                    if (result.escenarios.simulaciones && result.escenarios.simulaciones.length > 0) {
+                        const firstLocalidad = result.escenarios.simulaciones[0];
+                        await fetchAlturaData(firstLocalidad);
+                    }
+
+                    setToastMessage('✅ Simulación ejecutada correctamente');
+                    setToastVariant('success');
+                    setShowToast(true);
+                }
+            } else {
+                // Intentar obtener el mensaje de error del servidor
+                let errorMessage = '❌ Error al ejecutar la simulación';
+                try {
+                    const errorData = await response.json();
+                    if (errorData.message) {
+                        errorMessage = `❌ ${errorData.message}`;
+                    } else if (errorData.error) {
+                        errorMessage = `❌ ${errorData.error}`;
+                    }
+                } catch (e) {
+                    errorMessage = `❌ Error ${response.status}: ${response.statusText}`;
+                }
+
+                console.error('❌ Error en prueba-sismo:', errorMessage);
+                setToastMessage(errorMessage);
+                setToastVariant('danger');
+                setShowToast(true);
+            }
+        } catch (error) {
+            console.error('❌ Error:', error);
+            const errorMessage = error.message
+                ? `❌ Error de conexión: ${error.message}`
+                : '❌ Error de conexión con el servidor';
+            setToastMessage(errorMessage);
+            setToastVariant('danger');
+            setShowToast(true);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchAlturaData = async (localidad) => {
+        try {
             const alturaRequestData = {
                 localidad: 'Pacifico',
-                mag: earthquake.magnitud,
-                fecha: earthquake.localTime,
-                sismoid: earthquake.id
+                mag: formData.magnitud,
+                fecha: new Date().toISOString(),
+                sismoid: `PRUEBA_${Date.now()}`
             };
-            // No fijar 'caso'; usar el proveniente de la simulación de Pacífico si existe
+
             if (localidad) {
                 if (localidad.caso) {
                     alturaRequestData.caso = localidad.caso;
                 } else if (localidad.origen) {
-                    // Fallback razonable: algunos escenarios exponen 'origen' en lugar de 'caso'
                     alturaRequestData.caso = localidad.origen;
                 }
             }
@@ -257,74 +273,14 @@ function EarthquakeList() {
         return '#6c757d';
     };
 
-    const handlePageChange = (pageNumber) => {
-        setCurrentPage(pageNumber);
-        const earthquake = earthquakes[pageNumber];
-        if (earthquake) {
-            // Centrar el mapa en el terremoto seleccionado con zoom
-            setMapCenter([earthquake.latitud, earthquake.longitud]);
-            setMapZoom(6);
-        }
-    };
-
-    // Generar items de paginación
-    const renderPaginationItems = () => {
-        const items = [];
-        const maxVisible = 5;
-        let startPage = Math.max(0, currentPage - Math.floor(maxVisible / 2));
-        let endPage = Math.min(totalPages - 1, startPage + maxVisible - 1);
-
-        // Ajustar si estamos cerca del final
-        if (endPage - startPage < maxVisible - 1) {
-            startPage = Math.max(0, endPage - maxVisible + 1);
-        }
-
-        if (startPage > 0) {
-            items.push(
-                <Pagination.First key="first" onClick={() => handlePageChange(0)} />
-            );
-        }
-
-        if (currentPage > 0) {
-            items.push(
-                <Pagination.Prev key="prev" onClick={() => handlePageChange(currentPage - 1)} />
-            );
-        }
-
-        for (let i = startPage; i <= endPage; i++) {
-            items.push(
-                <Pagination.Item
-                    key={i}
-                    active={i === currentPage}
-                    onClick={() => handlePageChange(i)}
-                >
-                    {i + 1}
-                </Pagination.Item>
-            );
-        }
-
-        if (currentPage < totalPages - 1) {
-            items.push(
-                <Pagination.Next key="next" onClick={() => handlePageChange(currentPage + 1)} />
-            );
-        }
-
-        if (endPage < totalPages - 1) {
-            items.push(
-                <Pagination.Last key="last" onClick={() => handlePageChange(totalPages - 1)} />
-            );
-        }
-
-        return items;
-    };
-
     return (
         <div className="earthquake-list-container">
             <div className="list-header">
                 <div className="d-flex justify-content-between align-items-start flex-wrap">
                     <div>
-                        <h1>Lista de Terremotos</h1>
-                        <p>Navegación uno por uno con vista en mapa</p>
+                        <h1>Prueba Manual de Sismo</h1>
+                        <p>Ingresa los datos manualmente para ejecutar una simulación</p>
+                        <small className="text-muted">💡 Haz clic en el mapa para actualizar las coordenadas</small>
                     </div>
                     <div className="layer-selector mt-2">
                         <Form.Select
@@ -339,115 +295,142 @@ function EarthquakeList() {
                         </Form.Select>
                     </div>
                 </div>
-                <div className="d-flex align-items-center gap-2 mt-2">
-                    <Badge bg="primary">Total: {earthquakes.length} terremotos</Badge>
-                    <Badge bg={isConnected ? 'success' : 'secondary'}>
-                        {isConnected ? '🟢 Socket Conectado' : '⚫ Socket Desconectado'}
-                    </Badge>
-                </div>
             </div>
 
             <Row className="g-0 content-row">
-                {/* Panel lateral con información del terremoto */}
+                {/* Panel lateral con formulario */}
                 <Col lg={4} className="info-panel">
                     <div className="info-content">
-                        {earthquakes.length === 0 ? (
-                            <Card className="earthquake-card">
-                                <Card.Body className="text-center">
-                                    <Alert variant="info" className="mb-0">
-                                        No hay terremotos disponibles en este momento.
-                                    </Alert>
-                                </Card.Body>
-                            </Card>
-                        ) : currentEarthquake && (
-                            <Card className="earthquake-card">
-                                <Card.Header className="d-flex justify-content-between align-items-center">
-                                    <span>Terremoto {currentPage + 1} de {totalPages}</span>
-                                    <Badge
-                                        bg={currentEarthquake.magnitud >= 5 ? 'danger' : currentEarthquake.magnitud >= 4 ? 'warning' : 'info'}
+                        <Card className="earthquake-card">
+                            <Card.Header>
+                                <strong>Parámetros del Sismo</strong>
+                            </Card.Header>
+                            <Card.Body>
+                                <Form onSubmit={handleSubmit}>
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Magnitud</Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            name="magnitud"
+                                            value={formData.magnitud}
+                                            onChange={handleInputChange}
+                                            step="0.1"
+                                            min="0"
+                                            max="10"
+                                            required
+                                        />
+                                    </Form.Group>
+
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Latitud</Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            name="latitud"
+                                            value={formData.latitud}
+                                            onChange={handleInputChange}
+                                            step="0.0001"
+                                            min="-90"
+                                            max="90"
+                                            required
+                                        />
+                                    </Form.Group>
+
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Longitud</Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            name="longitud"
+                                            value={formData.longitud}
+                                            onChange={handleInputChange}
+                                            step="0.0001"
+                                            min="-180"
+                                            max="180"
+                                            required
+                                        />
+                                    </Form.Group>
+
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Profundidad (km)</Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            name="profundidad"
+                                            value={formData.profundidad}
+                                            onChange={handleInputChange}
+                                            step="0.1"
+                                            min="0"
+                                            required
+                                        />
+                                    </Form.Group>
+
+                                    <Form.Group className="mb-3">
+                                        <Form.Check
+                                            type="checkbox"
+                                            name="boletin"
+                                            label="Generar Boletín"
+                                            checked={formData.boletin}
+                                            onChange={handleInputChange}
+                                        />
+                                    </Form.Group>
+
+                                    <Button
+                                        variant="primary"
+                                        type="submit"
+                                        className="w-100"
+                                        disabled={loading}
                                     >
-                                        M {currentEarthquake.magnitud}
-                                    </Badge>
-                                </Card.Header>
-                                <Card.Body>
-                                    <h5 className="card-title">{currentEarthquake.place}</h5>
+                                        {loading ? (
+                                            <>
+                                                <Spinner
+                                                    as="span"
+                                                    animation="border"
+                                                    size="sm"
+                                                    role="status"
+                                                    aria-hidden="true"
+                                                    className="me-2"
+                                                />
+                                                Ejecutando...
+                                            </>
+                                        ) : (
+                                            'Ejecutar Simulación'
+                                        )}
+                                    </Button>
+                                </Form>
 
-                                    <div className="info-row">
-                                        <strong>ID:</strong>
-                                        <span>{currentEarthquake.id}</span>
-                                    </div>
-
-                                    <div className="info-row">
-                                        <strong>Magnitud:</strong>
-                                        <span
-                                            className="magnitude-badge"
-                                            style={{ backgroundColor: getColorByMagnitude(currentEarthquake.magnitud) }}
-                                        >
-                                            {currentEarthquake.magnitud}
-                                        </span>
-                                    </div>
-
-                                    <div className="info-row">
-                                        <strong>Profundidad:</strong>
-                                        <span>{currentEarthquake.profundidad.toFixed(2)} km</span>
-                                    </div>
-
-                                    <div className="info-row">
-                                        <strong>Fecha Local:</strong>
-                                        <span>{currentEarthquake.localTime}</span>
-                                    </div>
-
-                                    <div className="info-row">
-                                        <strong>Coordenadas:</strong>
-                                        <span>{currentEarthquake.latitud.toFixed(4)}, {currentEarthquake.longitud.toFixed(4)}</span>
-                                    </div>
-
-                                    {currentEarthquake.closerTowns && (
+                                {escenario && (
+                                    <div className="mt-3">
+                                        <hr />
+                                        <h6><strong>Resultado</strong></h6>
                                         <div className="info-row">
-                                            <strong>Ciudades cercanas:</strong>
-                                            <span className="text-muted">{currentEarthquake.closerTowns}</span>
+                                            <strong>ID Escenario:</strong>
+                                            <span>{escenario.idEscenario}</span>
                                         </div>
-                                    )}
-
-                                    {currentEarthquake.oceano && (
-                                        <div className="info-row">
-                                            <strong>Océano:</strong>
-                                            <span>
-                                                {currentEarthquake.oceano}
-                                                <Badge bg="secondary" className="ms-2">{currentEarthquake.oceanoRegion}</Badge>
-                                            </span>
-                                        </div>
-                                    )}
-
-                                    <div className="info-row">
-                                        <strong>Fuente:</strong>
-                                        <span>{currentEarthquake.fuente || currentEarthquake.fuenteApi}</span>
+                                        {escenario.distancia && (
+                                            <div className="info-row">
+                                                <strong>Distancia:</strong>
+                                                <span>{escenario.distancia.toFixed(2)} km</span>
+                                            </div>
+                                        )}
+                                        {escenario.simulaciones && (
+                                            <div className="info-row">
+                                                <strong>Simulaciones:</strong>
+                                                <Badge bg="info">{escenario.simulaciones.length}</Badge>
+                                            </div>
+                                        )}
+                                        {escenario.old && (
+                                            <Alert variant="warning" className="mt-2 mb-0" style={{ fontSize: '12px' }}>
+                                                <div>
+                                                    <strong>⚠️ Estructura Antigua</strong>
+                                                    <p className="mb-0 mt-1">
+                                                        Este escenario no contiene simulaciones detalladas de localidades.
+                                                        No se mostrarán datos de altura ni tiempos de llegada.
+                                                    </p>
+                                                </div>
+                                            </Alert>
+                                        )}
                                     </div>
-
-                                    {currentEarthquake.mapURL && (
-                                        <div className="mt-3">
-                                            <a
-                                                href={currentEarthquake.mapURL}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="btn btn-primary w-100"
-                                            >
-                                                Ver mapa en SGC
-                                            </a>
-                                        </div>
-                                    )}
-                                </Card.Body>
-                            </Card>
-                        )}
-
-                        {/* Paginación */}
-                        {earthquakes.length > 0 && (
-                            <div className="pagination-container mt-3">
-                                <Pagination className="justify-content-center flex-wrap">
-                                    {renderPaginationItems()}
-                                </Pagination>
-                            </div>
-                        )}
+                                )}
+                            </Card.Body>
+                        </Card>
                     </div>
                 </Col>
 
@@ -467,16 +450,23 @@ function EarthquakeList() {
                         />
 
                         <MapController center={mapCenter} zoom={mapZoom} />
+                        <MapClickHandler onMapClick={handleMapClick} />
 
                         {/* Polígono Pacífico Local */}
                         <Polygon
                             positions={datosLC.latlonPacificoLocal}
                             pathOptions={{
-                                olor: 'red',
+                                color: 'red',
                                 fillColor: '#EBC2C4',
                                 fillOpacity: 0.4,
                                 weight: 0.5
                             }}
+                            eventHandlers={{
+                                click: (e) => {
+                                    L.DomEvent.stopPropagation(e);
+                                }
+                            }}
+                            interactive={false}
                         >
                             <Popup>
                                 <div>
@@ -494,6 +484,12 @@ function EarthquakeList() {
                                 fillColor: '#FBE2B3',
                                 fillOpacity: 0.4
                             }}
+                            eventHandlers={{
+                                click: (e) => {
+                                    L.DomEvent.stopPropagation(e);
+                                }
+                            }}
+                            interactive={false}
                         >
                             <Popup>
                                 <div>
@@ -511,6 +507,12 @@ function EarthquakeList() {
                                 fillOpacity: 0.4,
                                 weight: 0.5
                             }}
+                            eventHandlers={{
+                                click: (e) => {
+                                    L.DomEvent.stopPropagation(e);
+                                }
+                            }}
+                            interactive={false}
                         >
                             <Popup>
                                 <div>
@@ -518,6 +520,7 @@ function EarthquakeList() {
                                 </div>
                             </Popup>
                         </Polygon>
+
                         {/* Polígono Caribe Local Insular */}
                         <Polygon
                             positions={datosLC.latlonCaribeLocalInsular}
@@ -527,13 +530,20 @@ function EarthquakeList() {
                                 fillOpacity: 0.4,
                                 weight: 0.5
                             }}
+                            eventHandlers={{
+                                click: (e) => {
+                                    L.DomEvent.stopPropagation(e);
+                                }
+                            }}
+                            interactive={false}
                         >
                             <Popup>
                                 <div>
-                                    <strong>Caribe Local</strong>
+                                    <strong>Caribe Local Insular</strong>
                                 </div>
                             </Popup>
                         </Polygon>
+
                         {/* Polígono Caribe Regional */}
                         <Polygon
                             positions={datosLC.latlonCaribeRegional}
@@ -543,6 +553,12 @@ function EarthquakeList() {
                                 fillColor: '#FBE2B3',
                                 fillOpacity: 0.4
                             }}
+                            eventHandlers={{
+                                click: (e) => {
+                                    L.DomEvent.stopPropagation(e);
+                                }
+                            }}
+                            interactive={false}
                         >
                             <Popup>
                                 <div>
@@ -551,42 +567,40 @@ function EarthquakeList() {
                             </Popup>
                         </Polygon>
 
-                        {/* PolyLine Pacifico Local */}
-                        <Polyline positions={datosLC.latlonPacificoLineaLocalRegional}
+                        {/* Líneas divisorias */}
+                        <Polyline
+                            positions={datosLC.latlonPacificoLineaLocalRegional}
                             pathOptions={{
                                 color: 'red',
                                 weight: 0.5
                             }}
                         />
-                        {/* PolyLine Caribe Local */}
-                        <Polyline positions={datosLC.latlonCaribeLineaLocalRegional}
+                        <Polyline
+                            positions={datosLC.latlonCaribeLineaLocalRegional}
                             pathOptions={{
                                 color: 'red',
                                 weight: 0.5
                             }}
                         />
-                        {/* PolyLine Caribe Local */}
-                        <Polyline positions={datosLC.latlonCaribeLocalInsular}
+                        <Polyline
+                            positions={datosLC.latlonCaribeLocalInsular}
                             pathOptions={{
                                 color: 'red',
                                 weight: 0.5
                             }}
                         />
 
-                        {/* Polilíneas de localidades coloreadas por estado de simulación */}
+                        {/* Polilíneas de localidades coloreadas por estado */}
                         {escenario && !escenario.old && escenario.simulaciones && escenario.simulaciones.length > 0 && (() => {
-                            // Buscar las localidades específicas y obtener su color de estado
                             const getLocalidadColor = (localidadNombre) => {
                                 const localidad = escenario.simulaciones.find(
                                     sim => sim.localidad && sim.localidad.toLowerCase() === localidadNombre.toLowerCase()
                                 );
-                                // Retornar el estadoColor o un color por defecto
                                 return localidad?.estadoColor || '#6c757d';
                             };
 
                             return (
                                 <>
-                                    {/* Polilínea Tumaco */}
                                     {datosLC.latlonTumaco && datosLC.latlonTumaco.length > 0 && (
                                         <Polyline
                                             positions={datosLC.latlonTumaco}
@@ -616,7 +630,6 @@ function EarthquakeList() {
                                         </Polyline>
                                     )}
 
-                                    {/* Polilínea Buenaventura */}
                                     {datosLC.latlonBuenaventura && datosLC.latlonBuenaventura.length > 0 && (
                                         <Polyline
                                             positions={datosLC.latlonBuenaventura}
@@ -646,7 +659,6 @@ function EarthquakeList() {
                                         </Polyline>
                                     )}
 
-                                    {/* Polilínea Juanchaco */}
                                     {datosLC.latlonJuanchaco && datosLC.latlonJuanchaco.length > 0 && (
                                         <Polyline
                                             positions={datosLC.latlonJuanchaco}
@@ -679,24 +691,24 @@ function EarthquakeList() {
                             );
                         })()}
 
-
-                        {currentEarthquake && (
+                        {/* Marker del sismo de prueba */}
+                        {!isNaN(formData.latitud) && !isNaN(formData.longitud) && formData.latitud !== '' && formData.longitud !== '' && (
                             <Marker
-                                position={[currentEarthquake.latitud, currentEarthquake.longitud]}
+                                position={[formData.latitud, formData.longitud]}
                                 icon={earthquakeIcon}
                             >
                                 <Popup>
                                     <div className="earthquake-popup">
-                                        <h6><strong>{currentEarthquake.place}</strong></h6>
-                                        <p><strong>Magnitud:</strong> {currentEarthquake.magnitud}</p>
-                                        <p><strong>Profundidad:</strong> {currentEarthquake.profundidad.toFixed(2)} km</p>
-                                        <p><strong>Fecha:</strong> {currentEarthquake.localTime}</p>
+                                        <h6><strong>Sismo de Prueba</strong></h6>
+                                        <p><strong>Magnitud:</strong> {formData.magnitud}</p>
+                                        <p><strong>Profundidad:</strong> {formData.profundidad} km</p>
+                                        <p><strong>Coordenadas:</strong> {typeof formData.latitud === 'number' ? formData.latitud.toFixed(4) : formData.latitud}, {typeof formData.longitud === 'number' ? formData.longitud.toFixed(4) : formData.longitud}</p>
                                     </div>
                                 </Popup>
                             </Marker>
                         )}
 
-                        {/* Marcador de escenario de simulación */}
+                        {/* Marker del escenario */}
                         {escenario && escenario.latitud && escenario.longitud && (
                             <Marker
                                 position={[escenario.latitud, escenario.longitud]}
@@ -756,7 +768,7 @@ function EarthquakeList() {
                                         <p style={{ margin: '4px 0' }}><strong>Latitud:</strong> {escenario.latitud.toFixed(4)}</p>
                                         <p style={{ margin: '4px 0' }}><strong>Longitud:</strong> {escenario.longitud.toFixed(4)}</p>
                                         <p style={{ margin: '4px 0' }}><strong>Distancia:</strong> {escenario.distancia.toFixed(2)} km</p>
-                                        <p style={{ margin: '4px 0' }}><strong>Sismo ID:</strong> {escenario.sismoid}</p>
+                                        <p style={{ margin: '4px 0' }}><strong>Sismo ID:</strong> {escenario.sismoid || 'N/A'}</p>
 
                                         {escenario.simulaciones && escenario.simulaciones.length > 0 && (
                                             <>
@@ -1044,55 +1056,25 @@ function EarthquakeList() {
                 </Col>
             </Row>
 
-            {/* Notificaciones Toast */}
+            {/* Toasts */}
             <ToastContainer position="bottom-end" className="p-3" style={{ zIndex: 9999 }}>
-                {/* Toast de carga */}
-                <Toast
-                    show={showLoadingToast}
-                    bg="info"
-                >
-                    <Toast.Header closeButton={false}>
-                        <Spinner animation="border" size="sm" className="me-2" />
-                        <strong className="me-auto">Cargando terremotos...</strong>
-                    </Toast.Header>
-                    <Toast.Body className="text-white">
-                        Obteniendo datos del servidor...
-                    </Toast.Body>
-                </Toast>
-
-                {/* Toast de actualización */}
                 <Toast
                     show={showToast}
                     onClose={() => setShowToast(false)}
-                    bg="success"
+                    bg={toastVariant}
                     autohide
                     delay={3000}
                 >
                     <Toast.Header>
-                        <strong className="me-auto">✅ Sismos Actualizados</strong>
+                        <strong className="me-auto">Notificación</strong>
                     </Toast.Header>
                     <Toast.Body className="text-white">
-                        Los datos de terremotos se han actualizado correctamente.
+                        {toastMessage}
                     </Toast.Body>
                 </Toast>
-
-                {/* Toast de error */}
-                {error && (
-                    <Toast
-                        show={true}
-                        bg="danger"
-                    >
-                        <Toast.Header>
-                            <strong className="me-auto">❌ Error</strong>
-                        </Toast.Header>
-                        <Toast.Body className="text-white">
-                            {error}
-                        </Toast.Body>
-                    </Toast>
-                )}
             </ToastContainer>
 
-            {/* Card Flotante de Localidades */}
+            {/* Floating card con datos de simulación */}
             <FloatingLocalidadesCard
                 escenario={escenario}
                 alturaData={alturaData}
@@ -1102,4 +1084,4 @@ function EarthquakeList() {
     );
 }
 
-export default EarthquakeList;
+export default PruebaSismo;

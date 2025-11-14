@@ -80,6 +80,10 @@ function Layout() {
                             <i className="bi bi-list-ul"></i>
                             {!collapsed && <span className="ms-2">Lista de Terremotos</span>}
                         </Nav.Link>
+                        <Nav.Link as={Link} to="/prueba-sismo" className="text-white sidebar-link" title="Prueba Manual de Sismo">
+                            <i className="bi bi-gear-fill"></i>
+                            {!collapsed && <span className="ms-2">Prueba Manual</span>}
+                        </Nav.Link>
                         <Nav.Link as={Link} to="/escenarios" className="text-white sidebar-link" title="Escenarios">
                             <i className="bi bi-pin-map-fill"></i>
                             {!collapsed && <span className="ms-2">Escenarios</span>}

@@ -1,0 +1,56 @@
+/* Estilos para el componente FloatingLocalidadesCard */
+
+.floating-localidades-card {
+    animation: slideInUp 0.3s ease-out;
+}
+
+.floating-localidades-card:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2) !important;
+}
+
+.floating-localidades-card.expanded {
+    animation: expandCard 0.3s ease-out;
+}
+
+@keyframes slideInUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes expandCard {
+    from {
+        transform: scale(0.95);
+        opacity: 0.8;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Scrollbar personalizado para el card flotante */
+.floating-localidades-card::-webkit-scrollbar {
+    width: 6px;
+}
+
+.floating-localidades-card::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.floating-localidades-card::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+.floating-localidades-card::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
