@@ -6,6 +6,7 @@ import L from 'leaflet';
 import datosLC from '../../docs/datosLC.json';
 import * as TileLayers from '../../TileLayers';
 import FloatingLocalidadesCard from '../../components/FloatingLocalidadesCard';
+import useEarthquakeStore, { initSocket } from '../../store/earthquakeStore';
 import './PruebaSismo.css';
 
 // Fix para los iconos de Leaflet en producción
@@ -89,6 +90,9 @@ function PruebaSismo() {
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [toastVariant, setToastVariant] = useState('success');
+    // Estado para correo/boletín emitido por socket
+    const [correoHtml, setCorreoHtml] = useState(null);
+    const [correoMeta, setCorreoMeta] = useState(null);
 
     // Opciones de capas disponibles
     const layerOptions = {
@@ -272,6 +276,38 @@ function PruebaSismo() {
         if (estadoLower.includes('vigilancia')) return '#ffc107';
         return '#6c757d';
     };
+
+    // Escuchar evento 'abrirCorreo' del backend para mostrar el boletín
+    useEffect(() => {
+        try {
+            const sock = initSocket();
+            const handleAbrirCorreo = (data) => {
+                try {
+                    // data expected: { html: b, boletin, sismo: 'SismoPrueba', num, mag, time }
+                    if (!data) return;
+                    // Filtrar por el tipo de sismo si viene indicado
+                    if (data.sismo && data.sismo !== 'SismoPrueba') return;
+
+                    const html = data.html || data.b || '';
+                    setCorreoHtml(html);
+                    setCorreoMeta({ boletin: data.boletin, num: data.num, mag: data.mag, time: data.time });
+                    setToastMessage('📧 Boletín recibido');
+                    setToastVariant('info');
+                    setShowToast(true);
+                } catch (err) {
+                    console.error('Error procesando abrirCorreo:', err);
+                }
+            };
+
+            sock.on('abrirCorreo', handleAbrirCorreo);
+
+            return () => {
+                try { sock.off('abrirCorreo', handleAbrirCorreo); } catch (e) { /* ignore */ }
+            };
+        } catch (err) {
+            console.error('No se pudo inicializar listener abrirCorreo:', err);
+        }
+    }, []);
 
     return (
         <div className="earthquake-list-container">
@@ -1080,6 +1116,56 @@ function PruebaSismo() {
                 alturaData={alturaData}
                 getEstadoColor={getEstadoColor}
             />
+
+            {/* Card flotante para mostrar el boletín (correoHtml) */}
+            {correoHtml && (
+                <div style={{
+                    position: 'fixed',
+                    top: '80px',
+                    right: '20px',
+                    width: '600px',
+                    maxHeight: '80vh',
+                    overflowY: 'auto',
+                    zIndex: 10000,
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                    borderRadius: '8px'
+                }}>
+                    <Card>
+                        <Card.Header className="d-flex justify-content-between align-items-center bg-info text-white">
+                            <div>
+                                <strong>📧 Boletín Generado</strong>
+                                {correoMeta && correoMeta.num && (
+                                    <span className="ms-2">#{correoMeta.num}</span>
+                                )}
+                            </div>
+                            <Button
+                                variant="light"
+                                size="sm"
+                                onClick={() => { setCorreoHtml(null); setCorreoMeta(null); }}
+                                title="Cerrar"
+                            >
+                                ✕
+                            </Button>
+                        </Card.Header>
+                        <Card.Body style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                            {correoMeta && (
+                                <div style={{ fontSize: '13px', marginBottom: '10px', color: '#666' }}>
+                                    {correoMeta.mag && <div><strong>Magnitud:</strong> {correoMeta.mag}</div>}
+                                    {correoMeta.time && <div><strong>Fecha:</strong> {correoMeta.time}</div>}
+                                </div>
+                            )}
+                            <div
+                                dangerouslySetInnerHTML={{ __html: correoHtml }}
+                                style={{
+                                    fontSize: '14px',
+                                    lineHeight: '1.5',
+                                    wordWrap: 'break-word'
+                                }}
+                            />
+                        </Card.Body>
+                    </Card>
+                </div>
+            )}
         </div>
     );
 }
