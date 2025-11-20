@@ -52,13 +52,9 @@ function Correos() {
         try {
             // Calcular el offset (desde) basado en la página actual
             const desde = (page - 1) * itemsPerPage;
-            const response = await fetchWithAuth(`http://localhost:4000/api/correos?limite=${itemsPerPage}&desde=${desde}`);
+            const response = await fetchWithAuth(`/api/correos?limite=${itemsPerPage}&desde=${desde}`);
 
-            if (!response.ok) {
-                throw new Error('Error al cargar los correos');
-            }
-
-            const data = await response.json();
+            const data = response.data;
             const correosArray = Array.isArray(data.correos) ? data.correos : [];
             setCorreos(correosArray);
             setFilteredCorreos(correosArray);
@@ -352,9 +348,18 @@ function Correos() {
                             </div>
                             <div className="mb-3">
                                 <strong>Contenido:</strong>
-                                <div
-                                    className="email-full-content mt-2"
-                                    dangerouslySetInnerHTML={{ __html: selectedCorreo.contenido }}
+                                <iframe
+                                    srcDoc={selectedCorreo.contenido}
+                                    style={{
+                                        width: '100%',
+                                        minHeight: '600px',
+                                        border: '1px solid #dee2e6',
+                                        borderRadius: '4px',
+                                        marginTop: '8px',
+                                        display: 'block'
+                                    }}
+                                    title="Contenido del Correo"
+                                    sandbox="allow-same-origin"
                                 />
                             </div>
                             {selectedCorreo.idSismo && (

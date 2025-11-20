@@ -49,13 +49,8 @@ function Contactos() {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetchWithAuth('http://localhost:4000/api/contactos');
-
-            if (!response.ok) {
-                throw new Error('Error al cargar los contactos');
-            }
-
-            const data = await response.json();
+            const response = await fetchWithAuth('/api/contactos');
+            const data = response.data;
             setContactos(Array.isArray(data) ? data : []);
             setFilteredContactos(Array.isArray(data) ? data : []);
         } catch (err) {
@@ -68,11 +63,9 @@ function Contactos() {
 
     const fetchEntidades = async () => {
         try {
-            const response = await fetchWithAuth('http://localhost:4000/api/entidades');
-            if (response.ok) {
-                const data = await response.json();
-                setEntidades(Array.isArray(data) ? data : []);
-            }
+            const response = await fetchWithAuth('/api/entidades');
+            const data = response.data;
+            setEntidades(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error('Error fetching entidades:', err);
         }
@@ -109,14 +102,9 @@ function Contactos() {
 
         try {
             const response = await fetchWithAuth(
-                `http://localhost:4000/api/contactos/${contactoToDelete._id}`,
+                `/api/contactos/${contactoToDelete._id}`,
                 { method: 'DELETE' }
             );
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Error al eliminar el contacto');
-            }
 
             console.log('✅ Contacto eliminado:', contactoToDelete._id);
 
@@ -193,27 +181,22 @@ function Contactos() {
 
         try {
             const url = isEditing
-                ? `http://localhost:4000/api/contactos/${editingId}`
-                : 'http://localhost:4000/api/contactos';
+                ? `/api/contactos/${editingId}`
+                : '/api/contactos';
 
             const method = isEditing ? 'PUT' : 'POST';
 
             const response = await fetchWithAuth(url, {
                 method: method,
-                body: JSON.stringify({
+                data: {
                     nombre: formData.nombre.trim(),
                     correo: formData.correo.trim(),
                     telefono: parseInt(formData.telefono),
                     entidad: formData.entidad
-                })
+                }
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || `Error al ${isEditing ? 'actualizar' : 'crear'} el contacto`);
-            }
-
-            const result = await response.json();
+            const result = response.data;
             console.log(`✅ Contacto ${isEditing ? 'actualizado' : 'creado'}:`, result);
 
             // Actualizar lista de contactos

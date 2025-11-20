@@ -1,6 +1,10 @@
 /**
  * Helper para manejar autenticación y peticiones con JWT
  */
+import axios from 'axios';
+
+// Configuración de la API
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 /**
  * Obtiene el token JWT del localStorage
@@ -29,11 +33,11 @@ export const isAuthenticated = () => {
 
 /**
  * Realiza una petición HTTP con el token JWT incluido
- * @param {string} url - URL del endpoint
- * @param {object} options - Opciones de fetch (method, body, etc.)
+ * @param {string} endpoint - Endpoint de la API (sin incluir la base URL)
+ * @param {object} options - Opciones de axios (method, data, etc.)
  * @returns {Promise} Promesa con la respuesta
  */
-export const fetchWithAuth = async (url, options = {}) => {
+export const fetchWithAuth = async (endpoint, options = {}) => {
     const token = getToken();
 
     const headers = {
@@ -49,21 +53,21 @@ export const fetchWithAuth = async (url, options = {}) => {
 
     const config = {
         ...options,
+        url: `${API_URL}${endpoint}`,
         headers,
     };
 
     try {
-        const response = await fetch(url, config);
-
+        const response = await axios(config);
+        return response;
+    } catch (error) {
         // Si el token expiró o es inválido (401), redirigir al login
-        if (response.status === 401) {
+        if (error.response && error.response.status === 401) {
             localStorage.clear();
             window.location.href = '/login';
             throw new Error('Sesión expirada. Por favor inicie sesión nuevamente.');
         }
 
-        return response;
-    } catch (error) {
         console.error('Error en petición autenticada:', error);
         throw error;
     }

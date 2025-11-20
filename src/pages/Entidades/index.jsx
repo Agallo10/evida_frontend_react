@@ -45,13 +45,8 @@ function Entidades() {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetchWithAuth('http://localhost:4000/api/entidades');
-
-            if (!response.ok) {
-                throw new Error('Error al cargar las entidades');
-            }
-
-            const data = await response.json();
+            const response = await fetchWithAuth('/api/entidades');
+            const data = response.data;
             setEntidades(Array.isArray(data) ? data : []);
             setFilteredEntidades(Array.isArray(data) ? data : []);
         } catch (err) {
@@ -91,14 +86,9 @@ function Entidades() {
 
         try {
             const response = await fetchWithAuth(
-                `http://localhost:4000/api/entidades/${entidadToDelete._id}`,
+                `/api/entidades/${entidadToDelete._id}`,
                 { method: 'DELETE' }
             );
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Error al eliminar la entidad');
-            }
 
             console.log('✅ Entidad eliminada:', entidadToDelete._id);
 
@@ -163,25 +153,20 @@ function Entidades() {
 
         try {
             const url = isEditing
-                ? `http://localhost:4000/api/entidades/${editingId}`
-                : 'http://localhost:4000/api/entidades';
+                ? `/api/entidades/${editingId}`
+                : '/api/entidades';
 
             const method = isEditing ? 'PUT' : 'POST';
 
             const response = await fetchWithAuth(url, {
                 method: method,
-                body: JSON.stringify({
+                data: {
                     nombre: formData.nombre.trim(),
                     descripcion: formData.descripcion.trim()
-                })
+                }
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || `Error al ${isEditing ? 'actualizar' : 'crear'} la entidad`);
-            }
-
-            const result = await response.json();
+            const result = response.data;
             console.log(`✅ Entidad ${isEditing ? 'actualizada' : 'creada'}:`, result);
 
             // Actualizar lista de entidades

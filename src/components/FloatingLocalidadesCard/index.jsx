@@ -2,6 +2,9 @@ import { useState } from 'react';
 import PropTypes from 'prop-types';
 import './FloatingLocalidadesCard.css';
 
+// Configuración de la API
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+
 /**
  * FloatingLocalidadesCard - Componente reutilizable para mostrar información de localidades afectadas
  * por simulaciones de tsunamis.
@@ -138,7 +141,7 @@ function FloatingLocalidadesCard({ escenario, alturaData, getEstadoColor }) {
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             if (firstLocalidad?.imagen) {
-                                                window.open(`http://localhost:4000/img?img=${firstLocalidad.imagen}`, '_blank');
+                                                window.open(`${API_URL}/img?img=${firstLocalidad.imagen}`, '_blank');
                                             }
                                         }}
                                     >
@@ -150,7 +153,7 @@ function FloatingLocalidadesCard({ escenario, alturaData, getEstadoColor }) {
                                 <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
                                     {firstLocalidad?.imagen && (
                                         <img
-                                            src={`http://localhost:4000/img?img=${firstLocalidad.imagen}`}
+                                            src={`${API_URL}/img?img=${firstLocalidad.imagen}`}
                                             alt={`Mapa Pacífico`}
                                             style={{
                                                 width: '100%',
@@ -212,7 +215,7 @@ function FloatingLocalidadesCard({ escenario, alturaData, getEstadoColor }) {
                                                 const pathParts = imgPath.split('/');
                                                 if (pathParts.length >= 4) {
                                                     const basePath = pathParts.slice(0, 4).join('/');
-                                                    const waveUrl = `http://localhost:4000/img?img=${encodeURIComponent(basePath + '/result/max1.png')}&name=wave`;
+                                                    const waveUrl = `${API_URL}/img?img=${encodeURIComponent(basePath + '/result/max1.png')}&name=wave`;
                                                     window.open(waveUrl, '_blank');
                                                 }
                                             }
@@ -230,7 +233,7 @@ function FloatingLocalidadesCard({ escenario, alturaData, getEstadoColor }) {
                                             const pathParts = imgPath.split('/');
                                             if (pathParts.length >= 4) {
                                                 const basePath = pathParts.slice(0, 4).join('/');
-                                                const waveUrl = `http://localhost:4000/img?img=${encodeURIComponent(basePath + '/result/max1.png')}&name=wave`;
+                                                const waveUrl = `${API_URL}/img?img=${encodeURIComponent(basePath + '/result/max1.png')}&name=wave`;
                                                 return (
                                                     <img
                                                         src={waveUrl}
@@ -480,7 +483,7 @@ function FloatingLocalidadesCard({ escenario, alturaData, getEstadoColor }) {
                                         {sim.imagen && (
                                             <div>
                                                 <img
-                                                    src={`http://localhost:4000/img?img=${sim.imagen}`}
+                                                    src={`${API_URL}/img?img=${sim.imagen}`}
                                                     alt={`Simulación ${sim.localidad}`}
                                                     style={{
                                                         width: '100%',
@@ -492,7 +495,7 @@ function FloatingLocalidadesCard({ escenario, alturaData, getEstadoColor }) {
                                                     }}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        window.open(`http://localhost:4000/img?img=${sim.imagen}`, '_blank');
+                                                        window.open(`${API_URL}/img?img=${sim.imagen}`, '_blank');
                                                     }}
                                                     onError={(e) => { e.target.style.display = 'none'; }}
                                                 />
@@ -656,7 +659,7 @@ function FloatingLocalidadesCard({ escenario, alturaData, getEstadoColor }) {
                         {firstLocalidad.imagen && (
                             <div style={{ marginTop: '12px', marginBottom: '8px' }}>
                                 <img
-                                    src={`http://localhost:4000/img?img=${firstLocalidad.imagen}`}
+                                    src={`${API_URL}/img?img=${firstLocalidad.imagen}`}
                                     alt={`Simulación ${firstLocalidad.localidad}`}
                                     style={{
                                         width: '100%',

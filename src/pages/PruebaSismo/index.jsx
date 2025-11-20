@@ -3,11 +3,15 @@ import { MapContainer, TileLayer, Marker, Popup, Polygon, useMap, Polyline } fro
 import { Container, Row, Col, Card, Spinner, Alert, Badge, Button, Toast, ToastContainer, Form } from 'react-bootstrap';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import axios from 'axios';
 import datosLC from '../../docs/datosLC.json';
 import * as TileLayers from '../../TileLayers';
 import FloatingLocalidadesCard from '../../components/FloatingLocalidadesCard';
 import useEarthquakeStore, { initSocket } from '../../store/earthquakeStore';
 import './PruebaSismo.css';
+
+// Variable de entorno para la URL de la API
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 // Fix para los iconos de Leaflet en producción
 delete L.Icon.Default.prototype._getIconUrl;
@@ -152,64 +156,54 @@ function PruebaSismo() {
 
             console.log('🔍 Ejecutando prueba de sismo:', payload);
 
-            const response = await fetch('http://localhost:4000/api/temblor/prueba-sismo', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload)
-            });
+            const response = await axios.post(`${API_URL}/api/temblor/prueba-sismo`, payload);
+            const result = response.data;
+            console.log('✅ Respuesta de prueba-sismo:', result);
 
-            if (response.ok) {
-                const result = await response.json();
-                console.log('✅ Respuesta de prueba-sismo:', result);
+            setEscenario(result.escenarios);
 
-                setEscenario(result.escenarios);
+            // Centrar mapa en el sismo
+            setMapCenter([formData.latitud, formData.longitud]);
+            setMapZoom(7);
 
-                // Centrar mapa en el sismo
-                setMapCenter([formData.latitud, formData.longitud]);
-                setMapZoom(7);
-
-                // Verificar si es estructura antigua
-                if (result.escenarios.old) {
-                    setToastMessage('⚠️ Escenario con estructura antigua detectado. No se mostrarán simulaciones detalladas.');
-                    setToastVariant('warning');
-                    setShowToast(true);
-                } else {
-                    // Si no es old y tiene simulaciones, obtener datos de altura
-                    if (result.escenarios.simulaciones && result.escenarios.simulaciones.length > 0) {
-                        const firstLocalidad = result.escenarios.simulaciones[0];
-                        await fetchAlturaData(firstLocalidad);
-                    }
-
-                    setToastMessage('✅ Simulación ejecutada correctamente');
-                    setToastVariant('success');
-                    setShowToast(true);
-                }
+            // Verificar si es estructura antigua
+            if (result.escenarios.old) {
+                setToastMessage('⚠️ Escenario con estructura antigua detectado. No se mostrarán simulaciones detalladas.');
+                setToastVariant('warning');
+                setShowToast(true);
             } else {
-                // Intentar obtener el mensaje de error del servidor
-                let errorMessage = '❌ Error al ejecutar la simulación';
-                try {
-                    const errorData = await response.json();
-                    if (errorData.message) {
-                        errorMessage = `❌ ${errorData.message}`;
-                    } else if (errorData.error) {
-                        errorMessage = `❌ ${errorData.error}`;
-                    }
-                } catch (e) {
-                    errorMessage = `❌ Error ${response.status}: ${response.statusText}`;
+                // Si no es old y tiene simulaciones, obtener datos de altura
+                if (result.escenarios.simulaciones && result.escenarios.simulaciones.length > 0) {
+                    const firstLocalidad = result.escenarios.simulaciones[0];
+                    await fetchAlturaData(firstLocalidad);
                 }
 
-                console.error('❌ Error en prueba-sismo:', errorMessage);
-                setToastMessage(errorMessage);
-                setToastVariant('danger');
+                setToastMessage('✅ Simulación ejecutada correctamente');
+                setToastVariant('success');
                 setShowToast(true);
             }
         } catch (error) {
             console.error('❌ Error:', error);
-            const errorMessage = error.message
-                ? `❌ Error de conexión: ${error.message}`
-                : '❌ Error de conexión con el servidor';
+            let errorMessage = '❌ Error al ejecutar la simulación';
+
+            if (error.response) {
+                // El servidor respondió con un código de error
+                const errorData = error.response.data;
+                if (errorData?.message) {
+                    errorMessage = `❌ ${errorData.message}`;
+                } else if (errorData?.error) {
+                    errorMessage = `❌ ${errorData.error}`;
+                } else {
+                    errorMessage = `❌ Error ${error.response.status}: ${error.response.statusText}`;
+                }
+            } else if (error.request) {
+                // La petición se hizo pero no hubo respuesta
+                errorMessage = '❌ Error de conexión con el servidor';
+            } else {
+                // Error al configurar la petición
+                errorMessage = `❌ Error: ${error.message}`;
+            }
+
             setToastMessage(errorMessage);
             setToastVariant('danger');
             setShowToast(true);
@@ -237,22 +231,9 @@ function PruebaSismo() {
 
             console.log('🔍 Solicitando datos de altura:', alturaRequestData);
 
-            const response = await fetch('http://localhost:4000/api/findAltura', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(alturaRequestData)
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log('✅ Datos de altura recibidos:', data);
-                setAlturaData(data);
-            } else {
-                console.error('❌ Error al obtener datos de altura:', response.statusText);
-                setAlturaData(null);
-            }
+            const response = await axios.post(`${API_URL}/api/findAltura`, alturaRequestData);
+            console.log('✅ Datos de altura recibidos:', response.data);
+            setAlturaData(response.data);
         } catch (error) {
             console.error('❌ Error en fetchAlturaData:', error);
             setAlturaData(null);
@@ -911,7 +892,7 @@ function PruebaSismo() {
                                                                                 📸 Imagen de Simulación:
                                                                             </p>
                                                                             <img
-                                                                                src={`http://localhost:4000/img/old/?img=${sim.localidad ? sim.localidad.toUpperCase() : 'CARTAGENA'}/${sim.IMAGEN}`}
+                                                                                src={`${API_URL}/img/old/?img=${sim.localidad ? sim.localidad.toUpperCase() : 'CARTAGENA'}/${sim.IMAGEN}`}
                                                                                 alt={`Simulación ${sim.localidad}`}
                                                                                 style={{
                                                                                     width: '100%',
@@ -1035,7 +1016,7 @@ function PruebaSismo() {
                                                                                 📸 Imagen de Simulación:
                                                                             </p>
                                                                             <img
-                                                                                src={`http://localhost:4000/img?img=${sim.imagen}`}
+                                                                                src={`${API_URL}/img?img=${sim.imagen}`}
                                                                                 alt={`Simulación ${sim.localidad}`}
                                                                                 style={{
                                                                                     width: '100%',
@@ -1121,16 +1102,19 @@ function PruebaSismo() {
             {correoHtml && (
                 <div style={{
                     position: 'fixed',
-                    top: '80px',
-                    right: '20px',
-                    width: '600px',
-                    maxHeight: '80vh',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: '85vw',
+                    maxWidth: '1200px',
+                    maxHeight: '90vh',
                     overflowY: 'auto',
                     zIndex: 10000,
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-                    borderRadius: '8px'
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                    borderRadius: '12px',
+                    backgroundColor: 'white'
                 }}>
-                    <Card>
+                    <Card style={{ margin: 0, border: 'none' }}>
                         <Card.Header className="d-flex justify-content-between align-items-center bg-info text-white">
                             <div>
                                 <strong>📧 Boletín Generado</strong>
@@ -1147,20 +1131,29 @@ function PruebaSismo() {
                                 ✕
                             </Button>
                         </Card.Header>
-                        <Card.Body style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                        <Card.Body style={{ maxHeight: '80vh', overflowY: 'auto', padding: 0 }}>
                             {correoMeta && (
-                                <div style={{ fontSize: '13px', marginBottom: '10px', color: '#666' }}>
+                                <div style={{
+                                    fontSize: '13px',
+                                    padding: '15px',
+                                    backgroundColor: '#f8f9fa',
+                                    borderBottom: '1px solid #dee2e6',
+                                    color: '#666'
+                                }}>
                                     {correoMeta.mag && <div><strong>Magnitud:</strong> {correoMeta.mag}</div>}
                                     {correoMeta.time && <div><strong>Fecha:</strong> {correoMeta.time}</div>}
                                 </div>
                             )}
-                            <div
-                                dangerouslySetInnerHTML={{ __html: correoHtml }}
+                            <iframe
+                                srcDoc={correoHtml}
                                 style={{
-                                    fontSize: '14px',
-                                    lineHeight: '1.5',
-                                    wordWrap: 'break-word'
+                                    width: '100%',
+                                    minHeight: '600px',
+                                    border: 'none',
+                                    display: 'block'
                                 }}
+                                title="Boletín HTML"
+                                sandbox="allow-same-origin"
                             />
                         </Card.Body>
                     </Card>

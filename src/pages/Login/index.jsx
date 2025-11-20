@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form, Button, Alert, FloatingLabel } from 'react-bootstrap';
+import axios from 'axios';
 import './Login.css';
+
+// Configuración de la API
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 function Login() {
     const navigate = useNavigate();
@@ -27,20 +31,14 @@ function Login() {
         setIsLoading(true);
 
         try {
-            const response = await fetch('http://localhost:4000/api/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    user: formData.username,
-                    pass: formData.password
-                })
+            const response = await axios.post(`${API_URL}/api/login`, {
+                user: formData.username,
+                pass: formData.password
             });
 
-            const data = await response.json();
+            const data = response.data;
 
-            if (response.ok && data.token) {
+            if (data.token) {
                 // Guardar token y datos de usuario
                 localStorage.setItem('isAuthenticated', 'true');
                 localStorage.setItem('token', data.token);
@@ -62,8 +60,21 @@ function Login() {
                 setError(data.error || 'Credenciales incorrectas. Por favor intente nuevamente.');
             }
         } catch (err) {
-            setError('Error al conectar con el servidor. Verifique que el backend esté corriendo.');
-            console.error('Login error:', err);
+            // Manejo de errores de axios
+            if (err.response) {
+                // El servidor respondió con un código de estado fuera del rango 2xx
+                const errorMessage = err.response.data?.error || err.response.data?.message || 'Credenciales incorrectas';
+                setError(errorMessage);
+                console.error('❌ Error de autenticación:', err.response.data);
+            } else if (err.request) {
+                // La petición fue hecha pero no hubo respuesta
+                setError('Error al conectar con el servidor. Verifique que el backend esté corriendo.');
+                console.error('❌ Error de conexión:', err.request);
+            } else {
+                // Algo sucedió al configurar la petición
+                setError('Error inesperado. Por favor intente nuevamente.');
+                console.error('❌ Error:', err.message);
+            }
         } finally {
             setIsLoading(false);
         }

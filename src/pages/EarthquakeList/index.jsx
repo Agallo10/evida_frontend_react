@@ -3,11 +3,15 @@ import { MapContainer, TileLayer, Marker, Popup, Polygon, useMap, Polyline } fro
 import { Container, Row, Col, Card, Spinner, Alert, Badge, Pagination, Toast, ToastContainer, Form } from 'react-bootstrap';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import axios from 'axios';
 import useEarthquakeStore from '../../store/earthquakeStore';
 import datosLC from '../../docs/datosLC.json';
 import * as TileLayers from '../../TileLayers';
 import FloatingLocalidadesCard from '../../components/FloatingLocalidadesCard';
 import './EarthquakeList.css';
+
+// Configuración de la API
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 // Fix para los iconos de Leaflet en producción
 delete L.Icon.Default.prototype._getIconUrl;
@@ -153,35 +157,22 @@ function EarthquakeList() {
 
                 console.log('🔍 Ejecutando simulación para sismo:', simulationData);
 
-                const response = await fetch('http://localhost:4000/api/findSimulacion', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(simulationData)
-                });
+                const response = await axios.post(`${API_URL}/api/findSimulacion`, simulationData);
+                const result = response.data;
+                console.log('✅ Simulación completada:', result);
 
-                if (response.ok) {
-                    const result = await response.json();
-                    console.log('✅ Simulación completada:', result);
+                // Almacenar el escenario de la respuesta
+                if (result && result.idEscenario && result.latitud && result.longitud) {
+                    setEscenario(result);
 
-                    // Almacenar el escenario de la respuesta
-                    if (result && result.idEscenario && result.latitud && result.longitud) {
-                        setEscenario(result);
-
-                        // Si hay simulaciones y no es old, hacer fetch de altura para el Pacífico
-                        if (!result.old && result.simulaciones && result.simulaciones.length > 0) {
-                            const pacificoLocalidad = result.simulaciones[0];
-                            fetchAlturaData(pacificoLocalidad, currentEarthquake);
-                        } else {
-                            setAlturaData(null);
-                        }
+                    // Si hay simulaciones y no es old, hacer fetch de altura para el Pacífico
+                    if (!result.old && result.simulaciones && result.simulaciones.length > 0) {
+                        const pacificoLocalidad = result.simulaciones[0];
+                        fetchAlturaData(pacificoLocalidad, currentEarthquake);
                     } else {
-                        setEscenario(null);
                         setAlturaData(null);
                     }
                 } else {
-                    console.error('❌ Error en simulación:', response.statusText);
                     setEscenario(null);
                     setAlturaData(null);
                 }
@@ -217,22 +208,10 @@ function EarthquakeList() {
 
             console.log('🔍 Solicitando datos de altura:', alturaRequestData);
 
-            const response = await fetch('http://localhost:4000/api/findAltura', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(alturaRequestData)
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log('✅ Datos de altura recibidos:', data);
-                setAlturaData(data);
-            } else {
-                console.error('❌ Error al obtener datos de altura:', response.statusText);
-                setAlturaData(null);
-            }
+            const response = await axios.post(`${API_URL}/api/findAltura`, alturaRequestData);
+            const data = response.data;
+            console.log('✅ Datos de altura recibidos:', data);
+            setAlturaData(data);
         } catch (error) {
             console.error('❌ Error en fetchAlturaData:', error);
             setAlturaData(null);
@@ -423,6 +402,20 @@ function EarthquakeList() {
                                         <strong>Fuente:</strong>
                                         <span>{currentEarthquake.fuente || currentEarthquake.fuenteApi}</span>
                                     </div>
+
+                                    {currentEarthquake.url && (
+                                        <div className="mt-3">
+                                            <a
+                                                href={currentEarthquake.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="btn btn-info w-100 mb-2"
+                                            >
+                                                <i className="bi bi-link-45deg me-2"></i>
+                                                Ver detalles del sismo
+                                            </a>
+                                        </div>
+                                    )}
 
                                     {currentEarthquake.mapURL && (
                                         <div className="mt-3">
@@ -691,6 +684,17 @@ function EarthquakeList() {
                                         <p><strong>Magnitud:</strong> {currentEarthquake.magnitud}</p>
                                         <p><strong>Profundidad:</strong> {currentEarthquake.profundidad.toFixed(2)} km</p>
                                         <p><strong>Fecha:</strong> {currentEarthquake.localTime}</p>
+                                        {currentEarthquake.url && (
+                                            <a
+                                                href={currentEarthquake.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="btn btn-info btn-sm w-100 mt-2"
+                                            >
+                                                <i className="bi bi-link-45deg me-1"></i>
+                                                Ver detalles
+                                            </a>
+                                        )}
                                     </div>
                                 </Popup>
                             </Marker>
@@ -863,7 +867,7 @@ function EarthquakeList() {
                                                                                 📸 Imagen de Simulación:
                                                                             </p>
                                                                             <img
-                                                                                src={`http://localhost:4000/img/old/?img=${sim.localidad ? sim.localidad.toUpperCase() : 'CARTAGENA'}/${sim.IMAGEN}`}
+                                                                                src={`${API_URL}/img/old/?img=${sim.localidad ? sim.localidad.toUpperCase() : 'CARTAGENA'}/${sim.IMAGEN}`}
                                                                                 alt={`Simulación ${sim.localidad}`}
                                                                                 style={{
                                                                                     width: '100%',
@@ -987,7 +991,7 @@ function EarthquakeList() {
                                                                                 📸 Imagen de Simulación:
                                                                             </p>
                                                                             <img
-                                                                                src={`http://localhost:4000/img?img=${sim.imagen}`}
+                                                                                src={`${API_URL}/img?img=${sim.imagen}`}
                                                                                 alt={`Simulación ${sim.localidad}`}
                                                                                 style={{
                                                                                     width: '100%',

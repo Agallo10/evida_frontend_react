@@ -165,6 +165,7 @@ function EarthquakeMap() {
                     const closerTowns = quake.closerTowns;
                     const fuente = quake.fuente || quake.fuenteApi;
                     const mapURL = quake.mapURL;
+                    const url = quake.url;
                     const oceano = quake.oceano;
                     const oceanoRegion = quake.oceanoRegion;
 
@@ -194,12 +195,23 @@ function EarthquakeMap() {
                                         <p><strong>Océano:</strong> {oceano} ({oceanoRegion})</p>
                                     )}
                                     {fuente && <p><strong>Fuente:</strong> {fuente}</p>}
+                                    {url && (
+                                        <a
+                                            href={url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="btn btn-sm btn-info mt-2 w-100"
+                                        >
+                                            <i className="bi bi-link-45deg me-1"></i>
+                                            Ver detalles del sismo
+                                        </a>
+                                    )}
                                     {mapURL && (
                                         <a
                                             href={mapURL}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="btn btn-sm btn-primary mt-2"
+                                            className="btn btn-sm btn-primary mt-2 w-100"
                                         >
                                             Ver mapa SGC
                                         </a>
