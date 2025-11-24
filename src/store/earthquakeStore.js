@@ -3,7 +3,7 @@ import { io } from 'socket.io-client';
 import axios from 'axios';
 
 // Variable de entorno para la URL de la API
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4001';
 const EARTHQUAKE_API_URL = import.meta.env.VITE_EARTHQUAKE_API_URL || 'http://localhost:8080';
 
 // Configurar la conexión de Socket.IO para el backend principal (Node.js)
@@ -75,6 +75,7 @@ const useEarthquakeStore = create((set, get) => ({
     lastUpdate: null,
     updatedFromSocket: false,
     socketListenersCount: 0,
+    socket: null, // Exponer el socket para acceso externo
 
     // Estado para escenarios
     escenarios: [],
@@ -87,7 +88,7 @@ const useEarthquakeStore = create((set, get) => ({
         set({ loading: true, error: null });
         try {
             // Nueva API de sismos en puerto 8080
-            const response = await axios.get(`${EARTHQUAKE_API_URL}/api/earthquakes`);
+            const response = await axios.get(`${EARTHQUAKE_API_URL}/api/test/earthquakes`);
             set({
                 earthquakes: Array.isArray(response.data) ? response.data : [],
                 loading: false,
@@ -149,6 +150,9 @@ const useEarthquakeStore = create((set, get) => ({
 
         const sock = initSocket();
         socketInitialized = true;
+
+        // Guardar el socket en el estado del store
+        set({ socket: sock });
 
         // Conexión establecida
         sock.on('connect', () => {

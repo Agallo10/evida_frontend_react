@@ -8,10 +8,11 @@ import useEarthquakeStore from '../../store/earthquakeStore';
 import datosLC from '../../docs/datosLC.json';
 import * as TileLayers from '../../TileLayers';
 import FloatingLocalidadesCard from '../../components/FloatingLocalidadesCard';
+import dimarLogo from '../../assets/logo.png';
 import './EarthquakeList.css';
 
 // Configuración de la API
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4001';
 
 // Fix para los iconos de Leaflet en producción
 delete L.Icon.Default.prototype._getIconUrl;
@@ -71,17 +72,17 @@ function EarthquakeList() {
     const [alturaData, setAlturaData] = useState(null); // Estado para almacenar datos de altura
     const [showSimulationModal, setShowSimulationModal] = useState(false);
     const [faultData, setFaultData] = useState({
-        longitud: -76.60,
-        latitud: -13.39,
         slip: 3.1,
         length: 180000,
         width: 90000,
         str: 325,
         dip: 18,
-        rake: 63,
-        depth: 39000
+        rake: 63
     });
     const [isExecutingSimulation, setIsExecutingSimulation] = useState(false);
+    const [existingRegionalSimulation, setExistingRegionalSimulation] = useState(null);
+    const [simulationProgress, setSimulationProgress] = useState(null); // { localidad, porcentaje }
+    const [simulationToast, setSimulationToast] = useState({ show: false, type: '', message: '' });
 
     // Opciones de capas disponibles
     const layerOptions = {
@@ -199,6 +200,129 @@ function EarthquakeList() {
         executeSimulation();
     }, [currentPage, earthquakes]);
 
+    // Verificar si existe simulación regional cuando cambia el sismo
+    useEffect(() => {
+        const checkExistingRegionalSimulation = async () => {
+            if (!currentEarthquake) {
+                setExistingRegionalSimulation(null);
+                return;
+            }
+
+            // Solo verificar si es regional o lejano
+            const isRegionalOrLejano = currentEarthquake.oceanoRegion &&
+                (currentEarthquake.oceanoRegion.toLowerCase() === 'regional' ||
+                    currentEarthquake.oceanoRegion.toLowerCase() === 'lejano');
+
+            if (!isRegionalOrLejano) {
+                setExistingRegionalSimulation(null);
+                return;
+            }
+
+            try {
+                console.log('🔍 Verificando simulación regional existente para:', currentEarthquake.id);
+                const response = await axios.get(`${API_URL}/api/new-simulaciones-regionales/${currentEarthquake.id}`);
+                const data = response.data;
+                console.log('✅ Simulación regional encontrada:', data);
+                setExistingRegionalSimulation(data);
+            } catch (error) {
+                // Si no existe (404) o cualquier otro error, simplemente no hay simulación
+                console.log('ℹ️ No hay simulación regional existente para este sismo');
+                setExistingRegionalSimulation(null);
+            }
+        };
+
+        checkExistingRegionalSimulation();
+    }, [currentPage, earthquakes]);
+
+    // Listeners de socket para simulación regional
+    useEffect(() => {
+        const { socket } = useEarthquakeStore.getState();
+        if (!socket) {
+            console.log('⚠️ Socket aún no está disponible');
+            return;
+        }
+
+        console.log('🔌 Configurando listeners de socket para simulación regional');
+
+        // Cuando empieza la simulación
+        const handleEmpezoSimulacion = (data) => {
+            console.log('🚀 Simulación iniciada:', data);
+            setSimulationToast({
+                show: true,
+                type: 'info',
+                message: `Simulación iniciada para ${data.localidad}`
+            });
+            setSimulationProgress({ localidad: data.localidad, porcentaje: 0 });
+        };
+
+        // Progreso de la simulación
+        const handleProgresoSimulacion = (data) => {
+            console.log('📊 Progreso simulación:', data);
+            setSimulationProgress({
+                localidad: data.localidad,
+                porcentaje: data.porcentaje,
+                idSismo: data.idSismo
+            });
+        };
+
+        // Simulación finalizada exitosamente
+        const handleFinalizoSimulacion = async (data) => {
+            console.log('✅ Simulación finalizada:', data);
+            setSimulationToast({
+                show: true,
+                type: 'success',
+                message: `Simulación completada exitosamente para ${data.localidad}`
+            });
+            setSimulationProgress(null);
+            setIsExecutingSimulation(false);
+
+            // Recargar la simulación regional existente
+            if (currentEarthquake) {
+                try {
+                    const response = await axios.get(`${API_URL}/api/new-simulaciones-regionales/${currentEarthquake.id}`);
+                    setExistingRegionalSimulation(response.data);
+                    console.log('🔄 Simulación regional actualizada');
+                } catch (error) {
+                    console.log('ℹ️ No se pudo actualizar la simulación regional');
+                }
+            }
+
+            // Auto-ocultar después de 5 segundos
+            setTimeout(() => {
+                setSimulationToast({ show: false, type: '', message: '' });
+            }, 5000);
+        };
+
+        // Error en la simulación
+        const handleErrorSimulacion = (data) => {
+            console.error('❌ Error en simulación:', data);
+            setSimulationToast({
+                show: true,
+                type: 'danger',
+                message: `Error en simulación ${data.localidad}: ${data.error}`
+            });
+            setSimulationProgress(null);
+            setIsExecutingSimulation(false);
+
+            // Auto-ocultar después de 7 segundos
+            setTimeout(() => {
+                setSimulationToast({ show: false, type: '', message: '' });
+            }, 7000);
+        };
+
+        socket.on('empezoSimulacion', handleEmpezoSimulacion);
+        socket.on('progresoSimulacion', handleProgresoSimulacion);
+        socket.on('finalizoSimulacion', handleFinalizoSimulacion);
+        socket.on('errorSimulacion', handleErrorSimulacion);
+
+        return () => {
+            socket.off('empezoSimulacion', handleEmpezoSimulacion);
+            socket.off('progresoSimulacion', handleProgresoSimulacion);
+            socket.off('finalizoSimulacion', handleFinalizoSimulacion);
+            socket.off('errorSimulacion', handleErrorSimulacion);
+        };
+    }, [currentEarthquake]);
+
     // Función para obtener datos de altura
     const fetchAlturaData = async (localidad, earthquake) => {
         try {
@@ -277,9 +401,19 @@ function EarthquakeList() {
                 sismo: {
                     id: currentEarthquake.id,
                     oceano: currentEarthquake.oceano || "",
-                    oceanoRegion: currentEarthquake.oceanoRegion || ""
+                    oceanoRegion: currentEarthquake.oceanoRegion || "",
+                    closerTowns: currentEarthquake.closerTowns || "",
+                    longitud: currentEarthquake.longitud || currentEarthquake.longitudOperativa,
+                    latitud: currentEarthquake.latitud,
+                    magnitud: currentEarthquake.magnitud,
+                    profundidad: currentEarthquake.profundidad
                 },
-                fault: faultData
+                fault: {
+                    ...faultData,
+                    longitud: currentEarthquake.longitudOperativa,
+                    latitud: currentEarthquake.latitud,
+                    depth: currentEarthquake.profundidad * 1000
+                }
             };
 
             console.log('🚀 Ejecutando simulación personalizada:', simulationPayload);
@@ -387,7 +521,7 @@ function EarthquakeList() {
 
             <Row className="g-0 content-row">
                 {/* Panel lateral con información del terremoto */}
-                <Col lg={4} className="info-panel">
+                <Col lg={3} className="info-panel">
                     <div className="info-content">
                         {earthquakes.length === 0 ? (
                             <Card className="earthquake-card">
@@ -476,19 +610,19 @@ function EarthquakeList() {
                                         </div>
                                     )}
 
-                                    {currentEarthquake.oceanoRegion && 
-                                     (currentEarthquake.oceanoRegion.toLowerCase() === 'regional' || 
-                                      currentEarthquake.oceanoRegion.toLowerCase() === 'lejano') && (
-                                        <div className="mt-2">
-                                            <button
-                                                onClick={() => setShowSimulationModal(true)}
-                                                className="btn btn-warning w-100 mb-2"
-                                            >
-                                                <i className="bi bi-cpu me-2"></i>
-                                                Ejecutar simulación
-                                            </button>
-                                        </div>
-                                    )}
+                                    {currentEarthquake.oceanoRegion &&
+                                        (currentEarthquake.oceanoRegion.toLowerCase() === 'regional' ||
+                                            currentEarthquake.oceanoRegion.toLowerCase() === 'lejano') && (
+                                            <div className="mt-2">
+                                                <button
+                                                    onClick={() => setShowSimulationModal(true)}
+                                                    className="btn btn-warning w-100 mb-2"
+                                                >
+                                                    <i className="bi bi-cpu me-2"></i>
+                                                    Ejecutar simulación
+                                                </button>
+                                            </div>
+                                        )}
 
                                     {currentEarthquake.mapURL && (
                                         <div className="mt-3">
@@ -518,13 +652,13 @@ function EarthquakeList() {
                 </Col>
 
                 {/* Mapa */}
-                <Col lg={8} className="map-panel">
+                <Col lg={6} className="map-panel">
                     <MapContainer
                         center={mapCenter}
                         zoom={mapZoom}
                         style={{ height: '100%', width: '100%' }}
-                        // worldCopyJump={true}
-                        // maxBoundsViscosity={1.0}
+                    // worldCopyJump={true}
+                    // maxBoundsViscosity={1.0}
                     >
                         <TileLayer
                             key={selectedLayer}
@@ -1119,6 +1253,252 @@ function EarthquakeList() {
                         )}
                     </MapContainer>
                 </Col>
+
+                {/* Panel derecho para información de simulaciones */}
+                <Col lg={3} className="info-panel" style={{ borderLeft: '1px solid #dee2e6' }}>
+                    <div className="info-content">
+                        {/* Logo DIMAR */}
+                        <div style={{ textAlign: 'center', marginBottom: '20px', paddingTop: '10px' }}>
+                            <img
+                                src={dimarLogo}
+                                alt="DIMAR Logo"
+                                style={{
+                                    maxWidth: '100%',
+                                    height: 'auto',
+                                    maxHeight: '220px'
+                                }}
+                            />
+                        </div>
+
+                        {/* Card de Localidades (FloatingLocalidadesCard) */}
+                        {escenario && alturaData && (
+                            <FloatingLocalidadesCard
+                                escenario={escenario}
+                                alturaData={alturaData}
+                                getEstadoColor={getEstadoColor}
+                            />
+                        )}
+
+                        {/* Card de simulación regional o mensaje de no amenaza */}
+                        {currentEarthquake && currentEarthquake.oceano && (
+                            !(currentEarthquake.oceanoRegion &&
+                                (currentEarthquake.oceanoRegion.toLowerCase() === 'regional' ||
+                                    currentEarthquake.oceanoRegion.toLowerCase() === 'lejano')) ? (
+                                // Mensaje cuando NO es regional/lejano (sismos locales)
+                                <Card className="mb-3" style={{ border: '2px solid #28a745' }}>
+                                    <Card.Header style={{ backgroundColor: '#28a745', color: 'white', fontWeight: 'bold' }}>
+                                        ✅ Información de Tsunami
+                                    </Card.Header>
+                                    <Card.Body>
+                                        <Alert variant="success" className="mb-0">
+                                            <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.5' }}>
+                                                El sismo <strong>{currentEarthquake.id}</strong> reportado por <strong>{currentEarthquake.fuente || currentEarthquake.fuenteApi}</strong> de magnitud <strong>Mw {currentEarthquake.magnitud}</strong> de origen <strong>{currentEarthquake.oceanoRegion || 'local'}</strong> NO representa una amenaza para la costa <strong>{currentEarthquake.oceano}</strong> colombiana teniendo en cuenta el Protocolo Nacional de Detección y Alerta de Tsunamis.
+                                            </p>
+                                        </Alert>
+                                    </Card.Body>
+                                </Card>
+                            ) : (
+                                // Card de simulación regional existente
+                                <Card className="mb-3" style={{ border: '2px solid #17a2b8' }}>
+                                    <Card.Header style={{ backgroundColor: '#17a2b8', color: 'white', fontWeight: 'bold' }}>
+                                        🌊 Simulación Regional
+                                    </Card.Header>
+                                    <Card.Body>
+                                        {existingRegionalSimulation ? (
+                                            <>
+                                                <Alert variant="info" className="mb-3">
+                                                    <small>
+                                                        <strong>ℹ️ Información:</strong> Ya existe una simulación para este sismo.
+                                                        Puedes ejecutar una nueva si lo deseas.
+                                                    </small>
+                                                </Alert>
+
+                                                {existingRegionalSimulation.sismo && (
+                                                    <div className="mb-3">
+                                                        <h6 style={{ fontWeight: 'bold', marginBottom: '10px', color: '#17a2b8' }}>Datos del Sismo</h6>
+                                                        <div style={{ fontSize: '13px' }}>
+                                                            <p style={{ margin: '4px 0' }}><strong>ID:</strong> {existingRegionalSimulation.idSismo || existingRegionalSimulation.sismo.id}</p>
+                                                            {existingRegionalSimulation.sismo.magnitud && (
+                                                                <p style={{ margin: '4px 0' }}><strong>Magnitud:</strong> {existingRegionalSimulation.sismo.magnitud}</p>
+                                                            )}
+                                                            {existingRegionalSimulation.sismo.profundidad && (
+                                                                <p style={{ margin: '4px 0' }}><strong>Profundidad:</strong> {existingRegionalSimulation.sismo.profundidad} m</p>
+                                                            )}
+                                                            {existingRegionalSimulation.sismo.oceano && (
+                                                                <p style={{ margin: '4px 0' }}><strong>Océano:</strong> {existingRegionalSimulation.sismo.oceano}</p>
+                                                            )}
+                                                            {existingRegionalSimulation.sismo.oceanoRegion && (
+                                                                <p style={{ margin: '4px 0' }}><strong>Región:</strong> {existingRegionalSimulation.sismo.oceanoRegion}</p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {existingRegionalSimulation.fault && (
+                                                    <div className="mb-3">
+                                                        <h6 style={{ fontWeight: 'bold', marginBottom: '10px', color: '#17a2b8' }}>Parámetros de Falla</h6>
+                                                        <div style={{ fontSize: '13px' }}>
+                                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                                                {existingRegionalSimulation.fault.slip && (
+                                                                    <p style={{ margin: '2px 0' }}><strong>Slip:</strong> {existingRegionalSimulation.fault.slip}</p>
+                                                                )}
+                                                                {existingRegionalSimulation.fault.length && (
+                                                                    <p style={{ margin: '2px 0' }}><strong>Length:</strong> {existingRegionalSimulation.fault.length} m</p>
+                                                                )}
+                                                                {existingRegionalSimulation.fault.width && (
+                                                                    <p style={{ margin: '2px 0' }}><strong>Width:</strong> {existingRegionalSimulation.fault.width} m</p>
+                                                                )}
+                                                                {existingRegionalSimulation.fault.str && (
+                                                                    <p style={{ margin: '2px 0' }}><strong>Strike:</strong> {existingRegionalSimulation.fault.str}°</p>
+                                                                )}
+                                                                {existingRegionalSimulation.fault.dip && (
+                                                                    <p style={{ margin: '2px 0' }}><strong>Dip:</strong> {existingRegionalSimulation.fault.dip}°</p>
+                                                                )}
+                                                                {existingRegionalSimulation.fault.rake && (
+                                                                    <p style={{ margin: '2px 0' }}><strong>Rake:</strong> {existingRegionalSimulation.fault.rake}°</p>
+                                                                )}
+                                                                {existingRegionalSimulation.fault.depth && (
+                                                                    <p style={{ margin: '2px 0' }}><strong>Depth:</strong> {existingRegionalSimulation.fault.depth} m</p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {existingRegionalSimulation.archivos && (
+                                                    <div className="mb-3">
+                                                        <h6 style={{ fontWeight: 'bold', marginBottom: '10px', color: '#17a2b8' }}>Imágenes de Simulación</h6>
+
+                                                        {/* Imagen Wave 1 */}
+                                                        {existingRegionalSimulation.archivos.wave1Png && (
+                                                            <div style={{ marginBottom: '12px' }}>
+                                                                <p style={{ margin: '4px 0 8px 0', fontSize: '13px', fontWeight: 'bold' }}>
+                                                                    🌊 Wave 1
+                                                                </p>
+                                                                <img
+                                                                    src={`${API_URL}/img/regionales/${existingRegionalSimulation.idSismo}/wave_1.png`}
+                                                                    alt="Wave 1"
+                                                                    style={{
+                                                                        width: '100%',
+                                                                        height: 'auto',
+                                                                        borderRadius: '4px',
+                                                                        border: '1px solid #ddd',
+                                                                        cursor: 'pointer'
+                                                                    }}
+                                                                    onClick={(e) => window.open(e.target.src, '_blank')}
+                                                                    onError={(e) => {
+                                                                        e.target.style.display = 'none';
+                                                                        e.target.nextElementSibling.style.display = 'block';
+                                                                    }}
+                                                                />
+                                                                <p style={{
+                                                                    display: 'none',
+                                                                    margin: '4px 0',
+                                                                    fontSize: '11px',
+                                                                    color: '#dc3545',
+                                                                    fontStyle: 'italic'
+                                                                }}>
+                                                                    ⚠️ No se pudo cargar la imagen
+                                                                </p>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Imagen Zmax */}
+                                                        {existingRegionalSimulation.archivos.zmaxPng && (
+                                                            <div style={{ marginBottom: '12px' }}>
+                                                                <p style={{ margin: '4px 0 8px 0', fontSize: '13px', fontWeight: 'bold' }}>
+                                                                    📊 Zmax
+                                                                </p>
+                                                                <img
+                                                                    src={`${API_URL}/img/regionales/${existingRegionalSimulation.idSismo}/zmax.png`}
+                                                                    alt="Zmax"
+                                                                    style={{
+                                                                        width: '100%',
+                                                                        height: 'auto',
+                                                                        borderRadius: '4px',
+                                                                        border: '1px solid #ddd',
+                                                                        cursor: 'pointer'
+                                                                    }}
+                                                                    onClick={(e) => window.open(e.target.src, '_blank')}
+                                                                    onError={(e) => {
+                                                                        e.target.style.display = 'none';
+                                                                        e.target.nextElementSibling.style.display = 'block';
+                                                                    }}
+                                                                />
+                                                                <p style={{
+                                                                    display: 'none',
+                                                                    margin: '4px 0',
+                                                                    fontSize: '11px',
+                                                                    color: '#dc3545',
+                                                                    fontStyle: 'italic'
+                                                                }}>
+                                                                    ⚠️ No se pudo cargar la imagen
+                                                                </p>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Imagen Max5 */}
+                                                        {existingRegionalSimulation.archivos.max5Png && (
+                                                            <div style={{ marginBottom: '12px' }}>
+                                                                <p style={{ margin: '4px 0 8px 0', fontSize: '13px', fontWeight: 'bold' }}>
+                                                                    📈 Max5
+                                                                </p>
+                                                                <img
+                                                                    src={`${API_URL}/img/regionales/${existingRegionalSimulation.idSismo}/max5.png`}
+                                                                    alt="Max5"
+                                                                    style={{
+                                                                        width: '100%',
+                                                                        height: 'auto',
+                                                                        borderRadius: '4px',
+                                                                        border: '1px solid #ddd',
+                                                                        cursor: 'pointer'
+                                                                    }}
+                                                                    onClick={(e) => window.open(e.target.src, '_blank')}
+                                                                    onError={(e) => {
+                                                                        e.target.style.display = 'none';
+                                                                        e.target.nextElementSibling.style.display = 'block';
+                                                                    }}
+                                                                />
+                                                                <p style={{
+                                                                    display: 'none',
+                                                                    margin: '4px 0',
+                                                                    fontSize: '11px',
+                                                                    color: '#dc3545',
+                                                                    fontStyle: 'italic'
+                                                                }}>
+                                                                    ⚠️ No se pudo cargar la imagen
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {existingRegionalSimulation.createdAt && (
+                                                    <div style={{
+                                                        marginTop: '12px',
+                                                        padding: '8px',
+                                                        backgroundColor: '#f8f9fa',
+                                                        borderRadius: '4px',
+                                                        fontSize: '12px',
+                                                        color: '#666'
+                                                    }}>
+                                                        <strong>Fecha de creación:</strong> {new Date(existingRegionalSimulation.createdAt).toLocaleString('es-CO')}
+                                                    </div>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <Alert variant="warning" className="mb-0">
+                                                <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.5' }}>
+                                                    El sismo <strong>{currentEarthquake.id}</strong> reportado por <strong>{currentEarthquake.fuente || currentEarthquake.fuenteApi}</strong> de magnitud <strong>Mw {currentEarthquake.magnitud}</strong> de origen <strong>{currentEarthquake.oceanoRegion}</strong> NO representa una amenaza para la costa <strong>{currentEarthquake.oceano}</strong> colombiana teniendo en cuenta el Protocolo Nacional de Detección y Alerta de Tsunamis.
+                                                </p>
+                                            </Alert>
+                                        )}
+                                    </Card.Body>
+                                </Card>
+                            )
+                        )}
+                    </div>
+                </Col>
             </Row>
 
             {/* Notificaciones Toast */}
@@ -1167,16 +1547,46 @@ function EarthquakeList() {
                         </Toast.Body>
                     </Toast>
                 )}
-            </ToastContainer>
 
-            {/* Card Flotante de Localidades */}
-            <FloatingLocalidadesCard
-                escenario={escenario}
-                alturaData={alturaData}
-                getEstadoColor={getEstadoColor}
-            />
-
-            {/* Modal para simulación personalizada */}
+                {/* Toast de simulación */}
+                <Toast
+                    show={simulationToast.show}
+                    onClose={() => setSimulationToast({ show: false, type: '', message: '' })}
+                    bg={simulationToast.type}
+                    autohide={false}
+                >
+                    <Toast.Header>
+                        <strong className="me-auto">
+                            {simulationToast.type === 'info' && '🚀 Simulación'}
+                            {simulationToast.type === 'success' && '✅ Simulación Exitosa'}
+                            {simulationToast.type === 'danger' && '❌ Error de Simulación'}
+                        </strong>
+                    </Toast.Header>
+                    <Toast.Body className="text-white">
+                        {simulationToast.message}
+                        {simulationProgress && (
+                            <div className="mt-2">
+                                <div className="d-flex justify-content-between mb-1">
+                                    <small>Progreso:</small>
+                                    <small>{simulationProgress.porcentaje}%</small>
+                                </div>
+                                <div className="progress" style={{ height: '20px' }}>
+                                    <div
+                                        className="progress-bar progress-bar-striped progress-bar-animated"
+                                        role="progressbar"
+                                        style={{ width: `${simulationProgress.porcentaje}%` }}
+                                        aria-valuenow={simulationProgress.porcentaje}
+                                        aria-valuemin="0"
+                                        aria-valuemax="100"
+                                    >
+                                        {simulationProgress.porcentaje}%
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </Toast.Body>
+                </Toast>
+            </ToastContainer>            {/* Modal para simulación personalizada */}
             <Modal show={showSimulationModal} onHide={() => setShowSimulationModal(false)} size="lg">
                 <Modal.Header closeButton>
                     <Modal.Title>Ejecutar Simulación Personalizada</Modal.Title>
@@ -1186,37 +1596,20 @@ function EarthquakeList() {
                         <>
                             <Alert variant="info" className="mb-3">
                                 <strong>Sismo seleccionado:</strong> {currentEarthquake.place}<br />
-                                <strong>Magnitud:</strong> {currentEarthquake.magnitud} | 
-                                <strong> Océano:</strong> {currentEarthquake.oceano} | 
+                                <strong>Magnitud:</strong> {currentEarthquake.magnitud} |
+                                <strong> Océano:</strong> {currentEarthquake.oceano} |
                                 <strong> Región:</strong> {currentEarthquake.oceanoRegion}
                             </Alert>
 
                             <h6 className="mb-3">Parámetros de Falla (Fault)</h6>
-                            <Row>
-                                <Col md={6}>
-                                    <Form.Group className="mb-3">
-                                        <Form.Label>Longitud</Form.Label>
-                                        <Form.Control
-                                            type="number"
-                                            step="0.01"
-                                            value={faultData.longitud}
-                                            onChange={(e) => handleFaultChange('longitud', e.target.value)}
-                                        />
-                                    </Form.Group>
-                                </Col>
-                                <Col md={6}>
-                                    <Form.Group className="mb-3">
-                                        <Form.Label>Latitud</Form.Label>
-                                        <Form.Control
-                                            type="number"
-                                            step="0.01"
-                                            value={faultData.latitud}
-                                            onChange={(e) => handleFaultChange('latitud', e.target.value)}
-                                        />
-                                    </Form.Group>
-                                </Col>
-                            </Row>
-
+                            <Alert variant="secondary" className="mb-3">
+                                <small>
+                                    <strong>Nota:</strong> Los valores de longitud ({currentEarthquake.longitudOperativa.toFixed(4)}),
+                                    latitud ({currentEarthquake.latitud.toFixed(4)}) y
+                                    depth ({(currentEarthquake.profundidad * 1000).toFixed(0)} m)
+                                    se tomarán automáticamente del sismo seleccionado.
+                                </small>
+                            </Alert>
                             <Row>
                                 <Col md={6}>
                                     <Form.Group className="mb-3">
@@ -1285,16 +1678,6 @@ function EarthquakeList() {
                                         />
                                     </Form.Group>
                                 </Col>
-                                <Col md={4}>
-                                    <Form.Group className="mb-3">
-                                        <Form.Label>Depth (metros)</Form.Label>
-                                        <Form.Control
-                                            type="number"
-                                            value={faultData.depth}
-                                            onChange={(e) => handleFaultChange('depth', e.target.value)}
-                                        />
-                                    </Form.Group>
-                                </Col>
                             </Row>
                         </>
                     )}
@@ -1303,8 +1686,8 @@ function EarthquakeList() {
                     <Button variant="secondary" onClick={() => setShowSimulationModal(false)}>
                         Cancelar
                     </Button>
-                    <Button 
-                        variant="primary" 
+                    <Button
+                        variant="primary"
                         onClick={executeCustomSimulation}
                         disabled={isExecutingSimulation}
                     >
