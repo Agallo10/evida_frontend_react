@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Circle, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Circle, Popup, Polygon } from 'react-leaflet';
 import { Container, Spinner, Alert, Badge, Toast, ToastContainer, Form } from 'react-bootstrap';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import useEarthquakeStore from '../../store/earthquakeStore';
 import * as TileLayers from '../../TileLayers';
 import './EarthquakeMap.css';
+import latlonData from '../../docs/latlonCPWorld_normalizado.json';
+import datosLC from '../../docs/datosLC.json';
+import latlonPacifico from '../../docs/latlonCPWorld_pacifico.json';
 
 // Fix para los iconos de Leaflet en producción
 delete L.Icon.Default.prototype._getIconUrl;
@@ -143,9 +146,6 @@ function EarthquakeMap() {
                 center={[20, -100]}
                 zoom={3}
                 style={{ height: 'calc(100vh - 200px)', width: '100%' }}
-                worldCopyJump={true}  // Permitir copias múltiples sin saltar
-            // maxBounds={null}       // Sin límites
-            // maxBoundsViscosity={0}
             >
                 <TileLayer
                     key={selectedLayer}
@@ -153,10 +153,41 @@ function EarthquakeMap() {
                     attribution={layerOptions[selectedLayer].layer.attribution}
                 />
 
+                {/* <Polygon
+                    positions={latlonData.latlonCPWorldN}
+                    pathOptions={{
+                        color: '#3388ff',
+                        fillColor: '#3388ff',
+                        fillOpacity: 0.2,
+                        weight: 2
+                    }}
+                />
+
+                <Polygon
+                    positions={datosLC.latlonCPWorld}
+                    pathOptions={{
+                        color: '#ff6b35',
+                        fillColor: '#ff6b35',
+                        fillOpacity: 0.3,
+                        weight: 2
+                    }}
+                />
+
+                <Polygon
+                    positions={latlonPacifico.latlonCPWorldFul}
+                    pathOptions={{
+                        color: '#00cc66',
+                        fillColor: '#00cc66',
+                        fillOpacity: 0.3,
+                        weight: 2
+                    }}
+                /> */}
+
                 {earthquakes.map((quake, index) => {
                     // Extraer datos del formato de la API local
                     const lat = quake.latitud;
-                    const lng = quake.longitud;
+                    const lng = quake.longitud; // Para mostrar información
+                    const lngOperativa = quake.longitudOperativa; // Para ubicar en el mapa
                     const mag = quake.magnitud;
                     const depth = quake.profundidad;
                     const place = quake.place || 'Ubicación desconocida';
@@ -174,7 +205,7 @@ function EarthquakeMap() {
                     return (
                         <Circle
                             key={quake.id || index}
-                            center={[lat, lng]}
+                            center={[lat, lngOperativa]}
                             radius={getRadiusByMagnitude(mag)}
                             pathOptions={{
                                 color: getColorByMagnitude(mag),

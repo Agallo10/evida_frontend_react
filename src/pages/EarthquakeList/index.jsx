@@ -105,7 +105,7 @@ function EarthquakeList() {
     // Actualizar el centro del mapa cuando se cargan los datos
     useEffect(() => {
         if (earthquakes.length > 0 && currentPage === 0) {
-            setMapCenter([earthquakes[0].latitud, earthquakes[0].longitud]);
+            setMapCenter([earthquakes[0].latitud, earthquakes[0].longitudOperativa]);
             setMapZoom(6);
         }
     }, [earthquakes]);
@@ -122,7 +122,7 @@ function EarthquakeList() {
 
             // Actualizar el centro del mapa al primer sismo
             if (earthquakes.length > 0) {
-                setMapCenter([earthquakes[0].latitud, earthquakes[0].longitud]);
+                setMapCenter([earthquakes[0].latitud, earthquakes[0].longitudOperativa]);
                 setMapZoom(6);
             }
 
@@ -241,7 +241,7 @@ function EarthquakeList() {
         const earthquake = earthquakes[pageNumber];
         if (earthquake) {
             // Centrar el mapa en el terremoto seleccionado con zoom
-            setMapCenter([earthquake.latitud, earthquake.longitud]);
+            setMapCenter([earthquake.latitud, earthquake.longitudOperativa]);
             setMapZoom(6);
         }
     };
@@ -450,8 +450,8 @@ function EarthquakeList() {
                         center={mapCenter}
                         zoom={mapZoom}
                         style={{ height: '100%', width: '100%' }}
-                        worldCopyJump={true}
-                        maxBoundsViscosity={1.0}
+                        // worldCopyJump={true}
+                        // maxBoundsViscosity={1.0}
                     >
                         <TileLayer
                             key={selectedLayer}
@@ -675,7 +675,7 @@ function EarthquakeList() {
 
                         {currentEarthquake && (
                             <Marker
-                                position={[currentEarthquake.latitud, currentEarthquake.longitud]}
+                                position={[currentEarthquake.latitud, currentEarthquake.longitudOperativa]}
                                 icon={earthquakeIcon}
                             >
                                 <Popup>
