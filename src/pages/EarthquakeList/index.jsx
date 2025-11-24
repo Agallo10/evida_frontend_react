@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polygon, useMap, Polyline } from 'react-leaflet';
-import { Container, Row, Col, Card, Spinner, Alert, Badge, Pagination, Toast, ToastContainer, Form } from 'react-bootstrap';
+import { Container, Row, Col, Card, Spinner, Alert, Badge, Pagination, Toast, ToastContainer, Form, Modal, Button } from 'react-bootstrap';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import axios from 'axios';
@@ -69,6 +69,19 @@ function EarthquakeList() {
     const [selectedLayer, setSelectedLayer] = useState('Esri_WorldImagery');
     const [escenario, setEscenario] = useState(null); // Estado para almacenar el escenario de simulación
     const [alturaData, setAlturaData] = useState(null); // Estado para almacenar datos de altura
+    const [showSimulationModal, setShowSimulationModal] = useState(false);
+    const [faultData, setFaultData] = useState({
+        longitud: -76.60,
+        latitud: -13.39,
+        slip: 3.1,
+        length: 180000,
+        width: 90000,
+        str: 325,
+        dip: 18,
+        rake: 63,
+        depth: 39000
+    });
+    const [isExecutingSimulation, setIsExecutingSimulation] = useState(false);
 
     // Opciones de capas disponibles
     const layerOptions = {
@@ -246,6 +259,52 @@ function EarthquakeList() {
         }
     };
 
+    // Función para manejar cambios en el formulario fault
+    const handleFaultChange = (field, value) => {
+        setFaultData(prev => ({
+            ...prev,
+            [field]: parseFloat(value) || 0
+        }));
+    };
+
+    // Función para ejecutar simulación personalizada
+    const executeCustomSimulation = async () => {
+        if (!currentEarthquake) return;
+
+        setIsExecutingSimulation(true);
+        try {
+            const simulationPayload = {
+                sismo: {
+                    id: currentEarthquake.id,
+                    oceano: currentEarthquake.oceano || "",
+                    oceanoRegion: currentEarthquake.oceanoRegion || ""
+                },
+                fault: faultData
+            };
+
+            console.log('🚀 Ejecutando simulación personalizada:', simulationPayload);
+
+            const response = await axios.post(`${API_URL}/api/temblor/simulacion-f1`, simulationPayload);
+            const result = response.data;
+            console.log('✅ Simulación personalizada completada:', result);
+
+            // Cerrar modal
+            setShowSimulationModal(false);
+
+            // Mostrar notificación de éxito
+            alert('Simulación ejecutada exitosamente');
+
+            // Opcional: Recargar la simulación automática
+            // Puedes agregar lógica adicional aquí si necesitas actualizar algo
+
+        } catch (error) {
+            console.error('❌ Error ejecutando simulación personalizada:', error);
+            alert('Error al ejecutar la simulación: ' + (error.response?.data?.message || error.message));
+        } finally {
+            setIsExecutingSimulation(false);
+        }
+    };
+
     // Generar items de paginación
     const renderPaginationItems = () => {
         const items = [];
@@ -414,6 +473,20 @@ function EarthquakeList() {
                                                 <i className="bi bi-link-45deg me-2"></i>
                                                 Ver detalles del sismo
                                             </a>
+                                        </div>
+                                    )}
+
+                                    {currentEarthquake.oceanoRegion && 
+                                     (currentEarthquake.oceanoRegion.toLowerCase() === 'regional' || 
+                                      currentEarthquake.oceanoRegion.toLowerCase() === 'lejano') && (
+                                        <div className="mt-2">
+                                            <button
+                                                onClick={() => setShowSimulationModal(true)}
+                                                className="btn btn-warning w-100 mb-2"
+                                            >
+                                                <i className="bi bi-cpu me-2"></i>
+                                                Ejecutar simulación
+                                            </button>
                                         </div>
                                     )}
 
@@ -1102,6 +1175,153 @@ function EarthquakeList() {
                 alturaData={alturaData}
                 getEstadoColor={getEstadoColor}
             />
+
+            {/* Modal para simulación personalizada */}
+            <Modal show={showSimulationModal} onHide={() => setShowSimulationModal(false)} size="lg">
+                <Modal.Header closeButton>
+                    <Modal.Title>Ejecutar Simulación Personalizada</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {currentEarthquake && (
+                        <>
+                            <Alert variant="info" className="mb-3">
+                                <strong>Sismo seleccionado:</strong> {currentEarthquake.place}<br />
+                                <strong>Magnitud:</strong> {currentEarthquake.magnitud} | 
+                                <strong> Océano:</strong> {currentEarthquake.oceano} | 
+                                <strong> Región:</strong> {currentEarthquake.oceanoRegion}
+                            </Alert>
+
+                            <h6 className="mb-3">Parámetros de Falla (Fault)</h6>
+                            <Row>
+                                <Col md={6}>
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Longitud</Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            step="0.01"
+                                            value={faultData.longitud}
+                                            onChange={(e) => handleFaultChange('longitud', e.target.value)}
+                                        />
+                                    </Form.Group>
+                                </Col>
+                                <Col md={6}>
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Latitud</Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            step="0.01"
+                                            value={faultData.latitud}
+                                            onChange={(e) => handleFaultChange('latitud', e.target.value)}
+                                        />
+                                    </Form.Group>
+                                </Col>
+                            </Row>
+
+                            <Row>
+                                <Col md={6}>
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Slip</Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            step="0.1"
+                                            value={faultData.slip}
+                                            onChange={(e) => handleFaultChange('slip', e.target.value)}
+                                        />
+                                    </Form.Group>
+                                </Col>
+                                <Col md={6}>
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Length (metros)</Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            value={faultData.length}
+                                            onChange={(e) => handleFaultChange('length', e.target.value)}
+                                        />
+                                    </Form.Group>
+                                </Col>
+                            </Row>
+
+                            <Row>
+                                <Col md={6}>
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Width (metros)</Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            value={faultData.width}
+                                            onChange={(e) => handleFaultChange('width', e.target.value)}
+                                        />
+                                    </Form.Group>
+                                </Col>
+                                <Col md={6}>
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Strike (str)</Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            value={faultData.str}
+                                            onChange={(e) => handleFaultChange('str', e.target.value)}
+                                        />
+                                    </Form.Group>
+                                </Col>
+                            </Row>
+
+                            <Row>
+                                <Col md={4}>
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Dip</Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            value={faultData.dip}
+                                            onChange={(e) => handleFaultChange('dip', e.target.value)}
+                                        />
+                                    </Form.Group>
+                                </Col>
+                                <Col md={4}>
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Rake</Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            value={faultData.rake}
+                                            onChange={(e) => handleFaultChange('rake', e.target.value)}
+                                        />
+                                    </Form.Group>
+                                </Col>
+                                <Col md={4}>
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Depth (metros)</Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            value={faultData.depth}
+                                            onChange={(e) => handleFaultChange('depth', e.target.value)}
+                                        />
+                                    </Form.Group>
+                                </Col>
+                            </Row>
+                        </>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowSimulationModal(false)}>
+                        Cancelar
+                    </Button>
+                    <Button 
+                        variant="primary" 
+                        onClick={executeCustomSimulation}
+                        disabled={isExecutingSimulation}
+                    >
+                        {isExecutingSimulation ? (
+                            <>
+                                <Spinner animation="border" size="sm" className="me-2" />
+                                Ejecutando...
+                            </>
+                        ) : (
+                            <>
+                                <i className="bi bi-play-circle me-2"></i>
+                                Ejecutar Simulación
+                            </>
+                        )}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </div>
     );
 }
