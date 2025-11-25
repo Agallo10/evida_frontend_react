@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Nav, Button } from 'react-bootstrap';
 import './Layout.css';
 
@@ -7,6 +7,7 @@ function Layout() {
     const [collapsed, setCollapsed] = useState(false);
     const [boletinesOpen, setBoletinesOpen] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
 
     // Obtener información del usuario
     const usuarioData = localStorage.getItem('usuario');
@@ -64,27 +65,27 @@ function Layout() {
                     )}
 
                     <Nav className="flex-column">
-                        <Nav.Link as={Link} to="/" className="text-white sidebar-link" title="Inicio">
+                        <Nav.Link as={Link} to="/" className={`text-white sidebar-link ${location.pathname === '/' ? 'active' : ''}`} title="Inicio">
                             <i className="bi bi-house-door-fill"></i>
                             {!collapsed && <span className="ms-2">Inicio</span>}
                         </Nav.Link>
-                        <Nav.Link as={Link} to="/about" className="text-white sidebar-link" title="Acerca de">
+                        <Nav.Link as={Link} to="/about" className={`text-white sidebar-link ${location.pathname === '/about' ? 'active' : ''}`} title="Acerca de">
                             <i className="bi bi-info-circle-fill"></i>
                             {!collapsed && <span className="ms-2">Acerca de</span>}
                         </Nav.Link>
-                        <Nav.Link as={Link} to="/earthquake-map" className="text-white sidebar-link" title="Mapa de Terremotos">
+                        <Nav.Link as={Link} to="/earthquake-map" className={`text-white sidebar-link ${location.pathname === '/earthquake-map' ? 'active' : ''}`} title="Mapa de Terremotos">
                             <i className="bi bi-globe-americas"></i>
                             {!collapsed && <span className="ms-2">Mapa de Terremotos</span>}
                         </Nav.Link>
-                        <Nav.Link as={Link} to="/earthquake-list" className="text-white sidebar-link" title="Lista de Terremotos">
+                        <Nav.Link as={Link} to="/earthquake-list" className={`text-white sidebar-link ${location.pathname === '/earthquake-list' ? 'active' : ''}`} title="Lista de Terremotos">
                             <i className="bi bi-list-ul"></i>
                             {!collapsed && <span className="ms-2">Lista de Terremotos</span>}
                         </Nav.Link>
-                        <Nav.Link as={Link} to="/prueba-sismo" className="text-white sidebar-link" title="Prueba Manual de Sismo">
+                        <Nav.Link as={Link} to="/prueba-sismo" className={`text-white sidebar-link ${location.pathname === '/prueba-sismo' ? 'active' : ''}`} title="Prueba Manual de Sismo">
                             <i className="bi bi-gear-fill"></i>
                             {!collapsed && <span className="ms-2">Prueba Manual</span>}
                         </Nav.Link>
-                        <Nav.Link as={Link} to="/escenarios" className="text-white sidebar-link" title="Escenarios">
+                        <Nav.Link as={Link} to="/escenarios" className={`text-white sidebar-link ${location.pathname === '/escenarios' ? 'active' : ''}`} title="Escenarios">
                             <i className="bi bi-pin-map-fill"></i>
                             {!collapsed && <span className="ms-2">Escenarios</span>}
                         </Nav.Link>
@@ -108,15 +109,15 @@ function Layout() {
 
                             {!collapsed && boletinesOpen && (
                                 <div className="submenu-items">
-                                    <Nav.Link as={Link} to="/correos" className="text-white sidebar-sublink" title="Correos">
+                                    <Nav.Link as={Link} to="/correos" className={`text-white sidebar-sublink ${location.pathname === '/correos' ? 'active' : ''}`} title="Correos">
                                         <i className="bi bi-envelope-fill"></i>
                                         <span className="ms-2">Correos</span>
                                     </Nav.Link>
-                                    <Nav.Link as={Link} to="/entidades" className="text-white sidebar-sublink" title="Entidades">
+                                    <Nav.Link as={Link} to="/entidades" className={`text-white sidebar-sublink ${location.pathname === '/entidades' ? 'active' : ''}`} title="Entidades">
                                         <i className="bi bi-building"></i>
                                         <span className="ms-2">Entidades</span>
                                     </Nav.Link>
-                                    <Nav.Link as={Link} to="/contactos" className="text-white sidebar-sublink" title="Contactos">
+                                    <Nav.Link as={Link} to="/contactos" className={`text-white sidebar-sublink ${location.pathname === '/contactos' ? 'active' : ''}`} title="Contactos">
                                         <i className="bi bi-person-lines-fill"></i>
                                         <span className="ms-2">Contactos</span>
                                     </Nav.Link>
@@ -124,7 +125,7 @@ function Layout() {
                             )}
                         </div>
 
-                        <Nav.Link as={Link} to="/socket-test" className="text-white sidebar-link" title="Test Socket">
+                        <Nav.Link as={Link} to="/socket-test" className={`text-white sidebar-link ${location.pathname === '/socket-test' ? 'active' : ''}`} title="Test Socket">
                             <i className="bi bi-plug-fill"></i>
                             {!collapsed && <span className="ms-2">Test Socket</span>}
                         </Nav.Link>

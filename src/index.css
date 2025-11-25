@@ -1,3 +1,18 @@
+/* Variables de colores institucionales DIMAR */
+:root {
+  --dimar-navy: #1C3775;
+  --dimar-navy-dark: #0f2347;
+  --dimar-navy-light: #2a4a8a;
+  --dimar-cyan: #009CDE;
+  --dimar-cyan-light: #00b4ff;
+  --dimar-orange: #DC582A;
+  --dimar-orange-light: #e67350;
+  --dimar-yellow: #EF9600;
+  --dimar-gray: #BABBBB;
+  --dimar-bg-light: #f5f9fc;
+  --dimar-bg-lighter: #e3f2fd;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -5,6 +20,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(135deg, var(--dimar-bg-light) 0%, #ffffff 100%);
 }
 
 code {
@@ -15,4 +31,442 @@ code {
 #root {
   height: 100vh;
   overflow: hidden;
+}
+
+/* Estilos globales para Bootstrap con colores DIMAR */
+.btn-primary {
+  background: linear-gradient(135deg, var(--dimar-cyan) 0%, #0085b8 100%) !important;
+  border-color: var(--dimar-cyan) !important;
+  box-shadow: 0 4px 8px rgba(0, 156, 222, 0.3);
+  border-radius: 50px;
+  padding: 0.65rem 1.5rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #0085b8 0%, var(--dimar-navy) 100%) !important;
+  border-color: var(--dimar-navy) !important;
+  box-shadow: 0 6px 12px rgba(28, 55, 117, 0.4);
+  transform: translateY(-2px);
+}
+
+.btn-info {
+  background: linear-gradient(135deg, var(--dimar-cyan) 0%, var(--dimar-cyan-light) 100%) !important;
+  border-color: var(--dimar-cyan) !important;
+  box-shadow: 0 4px 8px rgba(0, 156, 222, 0.3);
+  border-radius: 50px;
+  padding: 0.65rem 1.5rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-info:hover {
+  background: linear-gradient(135deg, var(--dimar-cyan-light) 0%, var(--dimar-cyan) 100%) !important;
+  box-shadow: 0 6px 12px rgba(0, 180, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.btn-warning {
+  background: linear-gradient(135deg, var(--dimar-orange) 0%, var(--dimar-orange-light) 100%) !important;
+  border-color: var(--dimar-orange) !important;
+  color: white !important;
+  box-shadow: 0 4px 8px rgba(220, 88, 42, 0.4);
+  border-radius: 50px;
+  padding: 0.65rem 1.5rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-warning:hover {
+  background: linear-gradient(135deg, var(--dimar-orange-light) 0%, var(--dimar-yellow) 100%) !important;
+  border-color: var(--dimar-yellow) !important;
+  box-shadow: 0 6px 12px rgba(239, 150, 0, 0.5);
+  transform: translateY(-2px);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+  border: none !important;
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+  border-radius: 50px;
+  padding: 0.65rem 1.5rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-success:hover {
+  background: linear-gradient(135deg, #20c997 0%, #28a745 100%) !important;
+  box-shadow: 0 6px 12px rgba(40, 167, 69, 0.4);
+  transform: translateY(-2px);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #dc3545 0%, var(--dimar-orange) 100%) !important;
+  border: none !important;
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+  border-radius: 50px;
+  padding: 0.65rem 1.5rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-danger:hover {
+  background: linear-gradient(135deg, var(--dimar-orange) 0%, #dc3545 100%) !important;
+  box-shadow: 0 6px 12px rgba(220, 53, 69, 0.4);
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, var(--dimar-gray) 0%, #95a5a6 100%) !important;
+  border: none !important;
+  box-shadow: 0 4px 8px rgba(186, 187, 187, 0.3);
+  border-radius: 50px;
+  padding: 0.65rem 1.5rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-secondary:hover {
+  background: linear-gradient(135deg, #95a5a6 0%, var(--dimar-gray) 100%) !important;
+  box-shadow: 0 6px 12px rgba(149, 165, 166, 0.4);
+  transform: translateY(-2px);
+}
+
+/* Botones pequeños */
+.btn-sm {
+  border-radius: 50px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+/* Botones de acción */
+.btn-action {
+  border-radius: 8px !important;
+  padding: 0.5rem !important;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Botones deshabilitados */
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.badge.bg-primary {
+  background: linear-gradient(135deg, var(--dimar-navy) 0%, var(--dimar-navy-light) 100%) !important;
+}
+
+.badge.bg-info {
+  background: linear-gradient(135deg, var(--dimar-cyan) 0%, var(--dimar-cyan-light) 100%) !important;
+}
+
+.badge.bg-success {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+}
+
+.badge.bg-warning {
+  background: linear-gradient(135deg, var(--dimar-orange) 0%, var(--dimar-yellow) 100%) !important;
+  color: white !important;
+  border: 1px solid var(--dimar-yellow);
+  box-shadow: 0 2px 4px rgba(220, 88, 42, 0.3);
+}
+
+.badge.bg-danger {
+  background: linear-gradient(135deg, #dc3545 0%, var(--dimar-orange) 100%) !important;
+  border: 1px solid var(--dimar-orange);
+}
+
+.badge.bg-secondary {
+  background: linear-gradient(135deg, var(--dimar-gray) 0%, #95a5a6 100%) !important;
+}
+
+.card {
+  border-radius: 8px;
+  border: 1px solid var(--dimar-bg-lighter);
+  box-shadow: 0 2px 8px rgba(28, 55, 117, 0.1);
+}
+
+.card-header {
+  background: linear-gradient(135deg, var(--dimar-navy) 0%, var(--dimar-navy-light) 100%);
+  color: white;
+  border-bottom: 2px solid var(--dimar-cyan);
+  font-weight: 600;
+}
+
+.alert-info {
+  background: linear-gradient(135deg, var(--dimar-bg-lighter) 0%, #ffffff 100%);
+  border-left: 4px solid var(--dimar-cyan);
+  color: var(--dimar-navy);
+}
+
+.form-control:focus {
+  border-color: var(--dimar-cyan);
+  box-shadow: 0 0 0 0.2rem rgba(0, 156, 222, 0.25);
+}
+
+.form-select:focus {
+  border-color: var(--dimar-cyan);
+  box-shadow: 0 0 0 0.2rem rgba(0, 156, 222, 0.25);
+}
+
+.pagination .page-link {
+  color: var(--dimar-navy);
+}
+
+.pagination .page-item.active .page-link {
+  background: linear-gradient(135deg, var(--dimar-orange) 0%, var(--dimar-yellow) 100%);
+  border-color: var(--dimar-orange);
+  color: white;
+  box-shadow: 0 2px 6px rgba(220, 88, 42, 0.4);
+}
+
+.pagination .page-link:hover {
+  background-color: var(--dimar-bg-lighter);
+  border-color: var(--dimar-cyan);
+  color: var(--dimar-navy);
+}
+
+/* Estilos para Modales y Diálogos */
+.modal-content {
+  border: 2px solid var(--dimar-orange);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(220, 88, 42, 0.3);
+  overflow: hidden;
+}
+
+.modal-header {
+  background: linear-gradient(135deg, var(--dimar-navy) 0%, var(--dimar-navy-light) 100%);
+  color: white;
+  border-bottom: 3px solid var(--dimar-orange);
+  border-left: 4px solid var(--dimar-yellow);
+  padding: 1.25rem;
+}
+
+.modal-title {
+  font-weight: 600;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.modal-body {
+  background: linear-gradient(135deg, #ffffff 0%, #fff5f0 100%);
+  padding: 1.5rem;
+}
+
+.modal-footer {
+  background: linear-gradient(135deg, #f5f9fc 0%, #fff5f0 100%);
+  border-top: 2px solid var(--dimar-orange);
+  padding: 1rem 1.5rem;
+}
+
+/* Estilos para Tablas */
+.table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table thead th {
+  background: linear-gradient(135deg, var(--dimar-navy) 0%, var(--dimar-navy-light) 100%);
+  color: white;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  border: none;
+  padding: 1rem;
+  border-bottom: 3px solid var(--dimar-orange);
+}
+
+.table tbody tr {
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+.table tbody tr:hover {
+  background: linear-gradient(90deg, rgba(220, 88, 42, 0.08) 0%, transparent 100%);
+  border-left-color: var(--dimar-orange);
+  transform: translateX(2px);
+}
+
+.table tbody td {
+  border-bottom: 1px solid #fde8e3;
+  padding: 1rem;
+}
+
+/* Estilos para Toast/Notificaciones */
+.toast {
+  border: 2px solid var(--dimar-orange);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(220, 88, 42, 0.3);
+}
+
+.toast-header {
+  background: linear-gradient(135deg, var(--dimar-navy) 0%, var(--dimar-navy-light) 100%);
+  color: white;
+  border-bottom: 2px solid var(--dimar-orange);
+  font-weight: 600;
+}
+
+.toast.bg-success .toast-header {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.toast.bg-info .toast-header {
+  background: linear-gradient(135deg, var(--dimar-cyan) 0%, var(--dimar-cyan-light) 100%);
+}
+
+.toast.bg-warning .toast-header {
+  background: linear-gradient(135deg, var(--dimar-orange) 0%, var(--dimar-yellow) 100%);
+}
+
+.toast.bg-danger .toast-header {
+  background: linear-gradient(135deg, #dc3545 0%, var(--dimar-orange) 100%);
+}
+
+/* Estilos para Accordions */
+.accordion-button {
+  background: linear-gradient(135deg, var(--dimar-bg-light) 0%, #ffffff 100%);
+  color: var(--dimar-navy);
+  font-weight: 600;
+  border-left: 3px solid var(--dimar-orange);
+}
+
+.accordion-button:not(.collapsed) {
+  background: linear-gradient(135deg, var(--dimar-navy) 0%, var(--dimar-navy-light) 100%);
+  color: white;
+  border-left: 4px solid var(--dimar-orange);
+  box-shadow: inset 0 -1px 0 rgba(220, 88, 42, 0.3);
+}
+
+.accordion-button:focus {
+  border-color: var(--dimar-orange);
+  box-shadow: 0 0 0 0.25rem rgba(220, 88, 42, 0.25);
+}
+
+/* Estilos para Tabs */
+.nav-tabs {
+  border-bottom: 3px solid var(--dimar-orange);
+}
+
+.nav-tabs .nav-link {
+  color: var(--dimar-navy);
+  font-weight: 500;
+  border: none;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.nav-tabs .nav-link:hover {
+  border-bottom-color: var(--dimar-yellow);
+  background: linear-gradient(135deg, rgba(220, 88, 42, 0.05) 0%, transparent 100%);
+}
+
+.nav-tabs .nav-link.active {
+  color: var(--dimar-orange);
+  background: linear-gradient(135deg, #fff5f0 0%, #ffffff 100%);
+  border-bottom: 3px solid var(--dimar-orange);
+  font-weight: 600;
+}
+
+/* Estilos para Dropdowns */
+.dropdown-menu {
+  border: 2px solid var(--dimar-orange);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(220, 88, 42, 0.2);
+  background: linear-gradient(135deg, #ffffff 0%, #fff5f0 100%);
+}
+
+.dropdown-item {
+  color: var(--dimar-navy);
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+  padding-left: 1.25rem;
+}
+
+.dropdown-item:hover {
+  background: linear-gradient(90deg, rgba(220, 88, 42, 0.1) 0%, transparent 100%);
+  border-left-color: var(--dimar-orange);
+  color: var(--dimar-orange);
+  transform: translateX(2px);
+}
+
+.dropdown-item.active {
+  background: linear-gradient(135deg, var(--dimar-orange) 0%, var(--dimar-yellow) 100%);
+  color: white;
+}
+
+/* Estilos para Progress Bars */
+.progress {
+  background: linear-gradient(135deg, #e3f2fd 0%, #fff5f0 100%);
+  border: 1px solid var(--dimar-orange);
+  border-radius: 8px;
+  height: 1.25rem;
+}
+
+.progress-bar {
+  background: linear-gradient(135deg, var(--dimar-orange) 0%, var(--dimar-yellow) 100%);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+/* Estilos para Spinners */
+.spinner-border {
+  border-color: var(--dimar-orange);
+  border-right-color: transparent;
+}
+
+.spinner-border.text-primary {
+  border-color: var(--dimar-cyan);
+  border-right-color: transparent;
+}
+
+/* Estilos para List Groups */
+.list-group-item {
+  border-left: 3px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.list-group-item:hover {
+  border-left-color: var(--dimar-orange);
+  background: linear-gradient(90deg, rgba(220, 88, 42, 0.05) 0%, transparent 100%);
+  transform: translateX(2px);
+}
+
+.list-group-item.active {
+  background: linear-gradient(135deg, var(--dimar-orange) 0%, var(--dimar-yellow) 100%);
+  border-color: var(--dimar-orange);
+  color: white;
 }

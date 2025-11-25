@@ -1,0 +1,99 @@
+.socket-test-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f5f9fc 0%, #ffffff 100%);
+}
+
+.socket-header {
+    padding: 1.5rem 2rem;
+    background: linear-gradient(135deg, #1C3775 0%, #2a4a8a 100%);
+    border-bottom: 4px solid #DC582A;
+    border-left: 5px solid #EF9600;
+    box-shadow: 0 4px 16px rgba(220, 88, 42, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+.socket-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 200px;
+    height: 100%;
+    background: linear-gradient(90deg, transparent 0%, rgba(220, 88, 42, 0.1) 100%);
+}
+
+.socket-header h1 {
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+    color: #ffffff;
+    font-weight: 700;
+    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+}
+
+.socket-header p {
+    margin-bottom: 0;
+    color: #009CDE;
+    font-size: 1rem;
+    font-weight: 500;
+    position: relative;
+    z-index: 1;
+}
+
+.socket-card {
+    border: 1px solid rgba(220, 88, 42, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(220, 88, 42, 0.15);
+    overflow: hidden;
+}
+
+.socket-card-header {
+    background: linear-gradient(135deg, #1C3775 0%, #2a4a8a 100%);
+    color: white;
+    border-bottom: 3px solid #DC582A;
+    padding: 1rem 1.5rem;
+}
+
+.socket-card-header h4 {
+    margin: 0;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+}
+
+.socket-info p {
+    margin-bottom: 0.75rem;
+    color: #1C3775;
+    font-size: 1rem;
+    padding-left: 0.5rem;
+    border-left: 3px solid #DC582A;
+}
+
+.socket-info strong {
+    color: #DC582A;
+}
+
+.socket-note {
+    background: linear-gradient(135deg, rgba(220, 88, 42, 0.05) 0%, rgba(239, 150, 0, 0.05) 100%);
+    border: 1px solid rgba(220, 88, 42, 0.2);
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+.code-title {
+    color: #1C3775;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    border-left: 3px solid #DC582A;
+    padding-left: 0.5rem;
+}
+
+.code-block {
+    border: 2px solid #DC582A;
+    border-left: 5px solid #EF9600;
+    box-shadow: 0 4px 8px rgba(220, 88, 42, 0.2);
+}

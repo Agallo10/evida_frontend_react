@@ -270,7 +270,7 @@ function Contactos() {
                 </InputGroup>
 
                 <Button
-                    variant="primary"
+                    variant="warning"
                     onClick={handleAdd}
                     className="d-flex align-items-center gap-2"
                 >

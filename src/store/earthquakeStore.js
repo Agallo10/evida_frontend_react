@@ -88,7 +88,7 @@ const useEarthquakeStore = create((set, get) => ({
         set({ loading: true, error: null });
         try {
             // Nueva API de sismos en puerto 8080
-            const response = await axios.get(`${EARTHQUAKE_API_URL}/api/earthquakes`);
+            const response = await axios.get(`${EARTHQUAKE_API_URL}/api/test/earthquakes`);
             set({
                 earthquakes: Array.isArray(response.data) ? response.data : [],
                 loading: false,
@@ -185,7 +185,7 @@ const useEarthquakeStore = create((set, get) => ({
         if (!earthquakeWsInitialized) {
             earthquakeWsInitialized = true;
             initEarthquakeWebSocket((newEarthquake) => {
-                console.log('📡 Actualizando lista de sismos por WebSocket (Go)');
+                console.log('📡 Actualizando lista de sismos por WebSocket (Go)',newEarthquake);
                 get().updateEarthquakes();
             });
         }

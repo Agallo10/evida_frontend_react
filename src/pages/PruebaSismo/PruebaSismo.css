@@ -5,20 +5,56 @@
 }
 
 .list-header {
-    padding: 1.5rem;
-    background-color: #f8f9fa;
-    border-bottom: 2px solid #dee2e6;
+    padding: 1.5rem 2rem;
+    background: linear-gradient(135deg, #1C3775 0%, #2a4a8a 100%);
+    border-bottom: 4px solid #DC582A;
+    border-left: 5px solid #EF9600;
+    box-shadow: 0 4px 16px rgba(220, 88, 42, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+.list-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 250px;
+    height: 100%;
+    background: linear-gradient(90deg, transparent 0%, rgba(220, 88, 42, 0.1) 100%);
 }
 
 .list-header h1 {
-    font-size: 1.75rem;
-    margin-bottom: 0.5rem;
-    color: #212529;
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+    color: #ffffff;
+    font-weight: 700;
+    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.list-header h1::before {
+    content: '⚡';
+    font-size: 1.5rem;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.1); }
 }
 
 .list-header p {
     margin-bottom: 0.5rem;
-    color: #6c757d;
+    color: #009CDE;
+    font-size: 1rem;
+    font-weight: 500;
+    position: relative;
+    z-index: 1;
 }
 
 .content-row {

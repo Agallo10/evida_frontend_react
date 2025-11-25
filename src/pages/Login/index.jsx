@@ -145,6 +145,7 @@ function Login() {
 
                         <Button
                             type="submit"
+                            variant="warning"
                             className="btn-login"
                             disabled={isLoading}
                         >

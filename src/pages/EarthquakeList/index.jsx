@@ -226,7 +226,7 @@ function EarthquakeList() {
                 setExistingRegionalSimulation(data);
             } catch (error) {
                 // Si no existe (404) o cualquier otro error, simplemente no hay simulación
-                console.log('ℹ️ No hay simulación regional existente para este sismo');
+                console.log('ℹ️ No hay simulación regional existente para este sismo',error);
                 setExistingRegionalSimulation(null);
             }
         };
@@ -283,7 +283,7 @@ function EarthquakeList() {
                     setExistingRegionalSimulation(response.data);
                     console.log('🔄 Simulación regional actualizada');
                 } catch (error) {
-                    console.log('ℹ️ No se pudo actualizar la simulación regional');
+                    console.log('ℹ️ No se pudo actualizar la simulación regional', error);
                 }
             }
 
@@ -602,7 +602,7 @@ function EarthquakeList() {
                                                 href={currentEarthquake.url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="btn btn-info w-100 mb-2"
+                                                className="btn btn-warning w-100 mb-2"
                                             >
                                                 <i className="bi bi-link-45deg me-2"></i>
                                                 Ver detalles del sismo
@@ -896,7 +896,7 @@ function EarthquakeList() {
                                                 href={currentEarthquake.url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="btn btn-info btn-sm w-100 mt-2"
+                                                className="btn btn-warning btn-sm w-100 mt-2"
                                             >
                                                 <i className="bi bi-link-45deg me-1"></i>
                                                 Ver detalles

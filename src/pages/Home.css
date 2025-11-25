@@ -1,0 +1,173 @@
+.home-container {
+    min-height: calc(100vh - 100px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, #f5f9fc 0%, #ffffff 100%);
+}
+
+.home-content {
+    text-align: center;
+    max-width: 900px;
+    margin: 0 auto;
+    animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.logo-container {
+    margin-bottom: 3rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.dimar-logo {
+    max-width: 400px;
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 8px 16px rgba(28, 55, 117, 0.2));
+    transition: transform 0.3s ease;
+}
+
+.dimar-logo:hover {
+    transform: scale(1.05);
+}
+
+.logo-placeholder {
+    display: none;
+}
+
+.placeholder-box {
+    width: 400px;
+    height: 300px;
+    background: linear-gradient(135deg, #ffffff 0%, #fff5f0 100%);
+    border: 3px dashed #DC582A;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #DC582A;
+}
+
+.placeholder-box i {
+    color: #DC582A;
+    opacity: 0.5;
+}
+
+.placeholder-box p {
+    margin-top: 1rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.welcome-text {
+    padding: 2rem;
+    background: linear-gradient(135deg, #ffffff 0%, #fff5f0 100%);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(220, 88, 42, 0.15);
+    border: 2px solid #DC582A;
+    border-left: 5px solid #EF9600;
+}
+
+.welcome-text h1 {
+    color: #1C3775;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+    text-shadow: 2px 2px 4px rgba(28, 55, 117, 0.1);
+}
+
+.welcome-text .subtitle {
+    color: #2a4a8a;
+    font-size: 1.2rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    font-weight: 400;
+}
+
+.info-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #DC582A 0%, #EF9600 100%);
+    color: white;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1rem;
+    box-shadow: 0 4px 12px rgba(220, 88, 42, 0.3);
+    transition: all 0.3s ease;
+}
+
+.info-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(220, 88, 42, 0.4);
+}
+
+.info-badge i {
+    font-size: 1.25rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .home-container {
+        padding: 1rem;
+    }
+
+    .dimar-logo {
+        max-width: 280px;
+    }
+
+    .placeholder-box {
+        width: 280px;
+        height: 200px;
+    }
+
+    .welcome-text {
+        padding: 1.5rem;
+    }
+
+    .welcome-text h1 {
+        font-size: 1.8rem;
+    }
+
+    .welcome-text .subtitle {
+        font-size: 1rem;
+    }
+
+    .info-badge {
+        font-size: 0.9rem;
+        padding: 0.6rem 1.2rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .dimar-logo {
+        max-width: 220px;
+    }
+
+    .placeholder-box {
+        width: 220px;
+        height: 160px;
+    }
+
+    .welcome-text h1 {
+        font-size: 1.5rem;
+    }
+
+    .welcome-text .subtitle {
+        font-size: 0.95rem;
+    }
+}

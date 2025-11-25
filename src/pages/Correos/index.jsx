@@ -152,7 +152,7 @@ function Correos() {
                 </Form.Select>
 
                 <Button
-                    variant="outline-primary"
+                    variant="warning"
                     onClick={fetchCorreos}
                     className="d-flex align-items-center gap-2"
                 >

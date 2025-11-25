@@ -390,7 +390,7 @@ function PruebaSismo() {
                                     </Form.Group>
 
                                     <Button
-                                        variant="primary"
+                                        variant="warning"
                                         type="submit"
                                         className="w-100"
                                         disabled={loading}

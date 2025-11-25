@@ -2,10 +2,23 @@
 
 .floating-localidades-card {
     animation: slideInUp 0.3s ease-out;
+    border: 2px solid #DC582A !important;
+    border-top: 3px solid #EF9600 !important;
+    box-shadow: 0 4px 12px rgba(220, 88, 42, 0.3) !important;
+    background: linear-gradient(135deg, #ffffff 0%, #fff5f0 100%) !important;
+}
+
+.floating-localidades-card .card-header {
+    background: linear-gradient(135deg, #1C3775 0%, #2a4a8a 100%) !important;
+    color: #ffffff !important;
+    border-bottom: 3px solid #DC582A !important;
+    border-left: 4px solid #EF9600 !important;
+    font-weight: 600;
 }
 
 .floating-localidades-card:hover {
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2) !important;
+    box-shadow: 0 8px 20px rgba(220, 88, 42, 0.4) !important;
+    border-color: #EF9600 !important;
 }
 
 .floating-localidades-card.expanded {
@@ -42,15 +55,15 @@
 }
 
 .floating-localidades-card::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: #e3f2fd;
     border-radius: 10px;
 }
 
 .floating-localidades-card::-webkit-scrollbar-thumb {
-    background: #888;
+    background: linear-gradient(180deg, #DC582A 0%, #EF9600 100%);
     border-radius: 10px;
 }
 
 .floating-localidades-card::-webkit-scrollbar-thumb:hover {
-    background: #555;
+    background: linear-gradient(180deg, #EF9600 0%, #DC582A 100%);
 }

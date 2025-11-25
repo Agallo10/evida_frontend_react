@@ -4,22 +4,30 @@
     margin: 0 auto;
     min-height: 100vh;
     overflow-y: auto;
+    background: linear-gradient(135deg, #f5f9fc 0%, #ffffff 100%);
 }
 
 .correos-header {
     margin-bottom: 2rem;
     text-align: center;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #1C3775 0%, #2a4a8a 100%);
+    border-radius: 12px;
+    border-bottom: 4px solid #DC582A;
+    border-left: 4px solid #EF9600;
+    box-shadow: 0 4px 12px rgba(220, 88, 42, 0.3);
 }
 
 .correos-header h1 {
-    color: #2c3e50;
+    color: #ffffff;
     font-size: 2rem;
     font-weight: 600;
     margin-bottom: 0.5rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .correos-header p {
-    color: #7f8c8d;
+    color: #009CDE;
     font-size: 1rem;
 }
 
@@ -32,14 +40,15 @@
 }
 
 .stat-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #DC582A 0%, #EF9600 100%);
     border-radius: 12px;
     padding: 1.5rem;
     color: white;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(220, 88, 42, 0.4);
     display: flex;
     align-items: center;
     gap: 1rem;
+    border: 2px solid #EF9600;
 }
 
 .stat-icon {
@@ -81,81 +90,100 @@
 
 /* Table Card */
 .correos-table-card {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #ffffff 0%, #fff8f5 100%);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(220, 88, 42, 0.15);
     overflow: visible;
     margin-bottom: 2rem;
+    border: 1px solid rgba(220, 88, 42, 0.2);
 }
 
 .table-responsive {
     overflow-x: auto;
     max-height: none;
+    border-radius: 16px;
 }
 
 .correos-table {
     margin: 0;
+    font-size: 0.95rem;
 }
 
 .correos-table thead {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #1C3775 0%, #2a4a8a 100%);
     color: white;
+    box-shadow: 0 2px 8px rgba(28, 55, 117, 0.3);
 }
 
 .correos-table thead th {
     border: none;
-    padding: 1rem;
-    font-weight: 600;
+    padding: 1.25rem 1rem;
+    font-weight: 700;
     text-transform: uppercase;
-    font-size: 0.85rem;
-    letter-spacing: 0.5px;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    white-space: nowrap;
 }
 
 .correos-table tbody tr {
-    transition: background-color 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: white;
+    border-bottom: 1px solid rgba(220, 88, 42, 0.1);
 }
 
 .correos-table tbody tr:hover {
-    background-color: #f8f9fa;
+    background: linear-gradient(90deg, rgba(220, 88, 42, 0.05) 0%, rgba(239, 150, 0, 0.05) 50%, transparent 100%);
+    transform: scale(1.01);
+    box-shadow: 0 4px 12px rgba(220, 88, 42, 0.1);
+    border-left: 4px solid #DC582A;
 }
 
 .correos-table tbody td {
-    padding: 1rem;
+    padding: 1.25rem 1rem;
     vertical-align: middle;
+    border: none;
 }
 
 /* Email Type Badge */
 .email-tipo {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
     font-size: 0.85rem;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.email-tipo:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
 }
 
 .email-tipo.ALERTA {
-    background-color: #dc3545;
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
     color: white;
 }
 
 .email-tipo.ADVERTENCIA {
-    background-color: #ff9800;
+    background: linear-gradient(135deg, #ff9800 0%, #e68900 100%);
     color: white;
 }
 
 .email-tipo.INFORMATIVO {
-    background-color: #28a745;
+    background: linear-gradient(135deg, #28a745 0%, #218838 100%);
     color: white;
 }
 
 .email-tipo.VIGILANCIA {
-    background-color: #ffc107;
+    background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
     color: #333;
 }
 
 .email-tipo.ACTUALIZACION {
-    background-color: #17a2b8;
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
     color: white;
 }
 
@@ -165,8 +193,9 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: #6c757d;
-    font-size: 0.9rem;
+    color: #1C3775;
+    font-size: 0.95rem;
+    font-weight: 500;
 }
 
 .email-destinatarios {
@@ -176,11 +205,21 @@
 }
 
 .email-destinatario {
-    background-color: #e9ecef;
-    padding: 0.15rem 0.5rem;
-    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(220, 88, 42, 0.1) 0%, rgba(239, 150, 0, 0.1) 100%);
+    border: 1px solid rgba(220, 88, 42, 0.3);
+    padding: 0.25rem 0.75rem;
+    border-radius: 50px;
     font-size: 0.75rem;
-    color: #495057;
+    color: #DC582A;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.email-destinatario:hover {
+    background: linear-gradient(135deg, #DC582A 0%, #EF9600 100%);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(220, 88, 42, 0.3);
 }
 
 /* Action Buttons */
@@ -189,10 +228,41 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
     padding: 0;
-    border-radius: 6px;
+    border-radius: 10px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid currentColor;
+    font-weight: 600;
+}
+
+.btn-action.btn-outline-primary {
+    color: #009CDE;
+    border-color: #009CDE;
+    background: linear-gradient(135deg, rgba(0, 156, 222, 0.05) 0%, transparent 100%);
+}
+
+.btn-action.btn-outline-primary:hover {
+    background: linear-gradient(135deg, #009CDE 0%, #0080b8 100%);
+    color: white;
+    border-color: #009CDE;
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 8px 16px rgba(0, 156, 222, 0.4);
+}
+
+.btn-action.btn-outline-info {
+    color: #009CDE;
+    border-color: #009CDE;
+    background: linear-gradient(135deg, rgba(0, 156, 222, 0.05) 0%, transparent 100%);
+}
+
+.btn-action.btn-outline-info:hover {
+    background: linear-gradient(135deg, #009CDE 0%, #0080b8 100%);
+    color: white;
+    border-color: #009CDE;
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 8px 16px rgba(0, 156, 222, 0.4);
 }
 
 /* Loading State */
@@ -229,9 +299,9 @@
 
 /* Modal Styles */
 .modal-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #1C3775 0%, #2a4a8a 100%);
     color: white;
-    border-bottom: none;
+    border-bottom: 3px solid #DC582A;
 }
 
 .modal-header .btn-close {
@@ -244,10 +314,10 @@
 }
 
 .email-full-content {
-    border: 1px solid #dee2e6;
+    border: 2px solid #DC582A;
     border-radius: 8px;
     padding: 1rem;
-    background-color: #f8f9fa;
+    background: linear-gradient(135deg, #fff5f0 0%, #ffffff 100%);
     max-height: 500px;
     overflow-y: auto;
 }
@@ -295,25 +365,26 @@
     justify-content: space-between;
     align-items: center;
     padding: 1.5rem 1.5rem;
-    background: linear-gradient(to right, #f8f9fa, #ffffff);
-    border-top: 2px solid #e9ecef;
+    background: linear-gradient(135deg, #fff5f0 0%, #ffe8dc 100%);
+    border-top: 3px solid #DC582A;
+    border-left: 4px solid #EF9600;
     margin-top: 0;
 }
 
 .pagination-info {
     display: flex;
     align-items: center;
-    color: #495057;
+    color: #1C3775;
     font-size: 0.95rem;
 }
 
 .pagination-info i {
-    color: #667eea;
+    color: #DC582A;
     font-size: 1.1rem;
 }
 
 .pagination-info strong {
-    color: #2c3e50;
+    color: #DC582A;
     font-weight: 600;
 }
 
@@ -340,24 +411,25 @@
 }
 
 .pagination-controls .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #DC582A 0%, #EF9600 100%);
     border: none;
-    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 2px 6px rgba(220, 88, 42, 0.4);
 }
 
 .pagination-controls .btn-primary:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 12px rgba(220, 88, 42, 0.5);
+    background: linear-gradient(135deg, #EF9600 0%, #DC582A 100%);
 }
 
 .pagination-controls .btn-outline-primary {
-    border-color: #667eea;
-    color: #667eea;
+    border-color: #DC582A;
+    color: #DC582A;
 }
 
 .pagination-controls .btn-outline-primary:hover {
-    background-color: #667eea;
-    border-color: #667eea;
+    background-color: #DC582A;
+    border-color: #DC582A;
     color: white;
     transform: translateY(-1px);
 }
