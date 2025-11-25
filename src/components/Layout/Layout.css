@@ -36,6 +36,13 @@
     font-weight: 600;
 }
 
+.sidebar-logo {
+    max-height: 50px;
+    width: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(220, 88, 42, 0.3));
+}
+
 .sidebar.collapsed .sidebar-header h4 {
     display: none;
 }

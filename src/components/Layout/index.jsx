@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Nav, Button } from 'react-bootstrap';
+import logoImage from '../../assets/llll.png';
 import './Layout.css';
 
 function Layout() {
@@ -36,7 +37,13 @@ function Layout() {
                     className={`sidebar bg-dark ${collapsed ? 'collapsed' : ''}`}
                 >
                     <div className="sidebar-header p-3 text-white d-flex justify-content-between align-items-center">
-                        {!collapsed && <h4 className="mb-0">EVIDA - DIMAR</h4>}
+                        {!collapsed && (
+                            <img 
+                                src={logoImage} 
+                                alt="EVIDA - DIMAR" 
+                                className="sidebar-logo"
+                            />
+                        )}
                         <Button
                             variant="outline-light"
                             size="sm"
