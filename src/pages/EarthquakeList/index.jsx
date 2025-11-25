@@ -493,29 +493,29 @@ function EarthquakeList() {
     return (
         <div className="earthquake-list-container">
             <div className="list-header">
-                <div className="d-flex justify-content-between align-items-start flex-wrap">
-                    <div>
-                        <h1>Lista de Terremotos</h1>
-                        <p>Navegación uno por uno con vista en mapa</p>
-                    </div>
-                    <div className="layer-selector mt-2">
+                <div className="text-center">
+                    <h1>Lista de Terremotos</h1>
+                    <p>Bienvenido al sistema EVIDA - Monitoreo sísmico en tiempo real para la protección de las costas colombianas</p>
+                </div>
+                <div className="d-flex align-items-center justify-content-center gap-3 mt-3 flex-wrap">
+                    <Badge bg="primary" style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}>
+                        Total: {earthquakes.length} terremotos
+                    </Badge>
+                    <Badge bg={isConnected ? 'success' : 'secondary'} style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}>
+                        {isConnected ? '🟢 Socket Conectado' : '⚫ Socket Desconectado'}
+                    </Badge>
+                    <div className="layer-selector">
                         <Form.Select
                             value={selectedLayer}
                             onChange={(e) => setSelectedLayer(e.target.value)}
                             size="sm"
-                            style={{ width: '250px' }}
+                            style={{ width: '250px', borderColor: '#DC582A', borderWidth: '2px' }}
                         >
                             {Object.entries(layerOptions).map(([key, { name }]) => (
                                 <option key={key} value={key}>{name}</option>
                             ))}
                         </Form.Select>
                     </div>
-                </div>
-                <div className="d-flex align-items-center gap-2 mt-2">
-                    <Badge bg="primary">Total: {earthquakes.length} terremotos</Badge>
-                    <Badge bg={isConnected ? 'success' : 'secondary'}>
-                        {isConnected ? '🟢 Socket Conectado' : '⚫ Socket Desconectado'}
-                    </Badge>
                 </div>
             </div>
 
