@@ -27,7 +27,7 @@
 .list-header h1 {
     font-size: 2rem;
     margin-bottom: 0.75rem;
-    color: #ffffff;
+    color: #1e3a8a;
     font-weight: 700;
     text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
     position: relative;
@@ -50,7 +50,7 @@
 
 .list-header p {
     margin-bottom: 0.5rem;
-    color: #009CDE;
+    color: #1e3a8a;
     font-size: 1rem;
     font-weight: 500;
     position: relative;

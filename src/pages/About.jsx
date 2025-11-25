@@ -1,60 +1,60 @@
-import { Card, Container, Row, Col, Badge } from 'react-bootstrap';
+import { Container } from 'react-bootstrap';
+import './About.css';
 
 function About() {
     return (
-        <Container>
-            <h1 className="mb-4">Acerca de Nosotros</h1>
-
-            <Row>
-                <Col lg={8}>
-                    <Card className="mb-4">
-                        <Card.Body>
-                            <Card.Title>Nuestra Misión</Card.Title>
-                            <Card.Text>
-                                Somos una empresa dedicada a crear soluciones web modernas y eficientes.
-                                Utilizamos las últimas tecnologías para ofrecer la mejor experiencia a nuestros usuarios.
-                            </Card.Text>
-                        </Card.Body>
-                    </Card>
-
-                    <Card className="mb-4">
-                        <Card.Body>
-                            <Card.Title>Nuestra Visión</Card.Title>
-                            <Card.Text>
-                                Ser líderes en el desarrollo de aplicaciones web innovadoras que transformen
-                                la manera en que las personas interactúan con la tecnología.
-                            </Card.Text>
-                        </Card.Body>
-                    </Card>
-                </Col>
-
-                <Col lg={4}>
-                    <Card className="mb-4">
-                        <Card.Body>
-                            <Card.Title>Tecnologías</Card.Title>
-                            <div className="d-flex flex-wrap gap-2">
-                                <Badge bg="primary">React</Badge>
-                                <Badge bg="success">Bootstrap</Badge>
-                                <Badge bg="info">React Router</Badge>
-                                <Badge bg="warning">Vite</Badge>
-                                <Badge bg="secondary">JavaScript</Badge>
-                                <Badge bg="danger">CSS</Badge>
-                            </div>
-                        </Card.Body>
-                    </Card>
-
-                    <Card>
-                        <Card.Body>
-                            <Card.Title>Contacto</Card.Title>
-                            <Card.Text>
-                                <strong>Email:</strong> info@ejemplo.com<br />
-                                <strong>Teléfono:</strong> +123 456 7890<br />
-                                <strong>Dirección:</strong> Calle Principal 123
-                            </Card.Text>
-                        </Card.Body>
-                    </Card>
-                </Col>
-            </Row>
+        <Container fluid className="about-container">
+            <div className="about-content">
+                <div className="logo-container">
+                    <img 
+                        src="/dimar-logo.png" 
+                        alt="DIMAR - Dirección General Marítima" 
+                        className="dimar-logo"
+                        onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextElementSibling.style.display = 'block';
+                        }}
+                    />
+                    <div className="logo-placeholder" style={{ display: 'none' }}>
+                        <div className="placeholder-box">
+                            <i className="bi bi-image" style={{ fontSize: '4rem' }}></i>
+                            <p>Logo DIMAR</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="about-text">
+                    <h1>Acerca del Sistema EVIDA</h1>
+                    <p className="subtitle">
+                        El Sistema de Vigilancia y Alerta de Tsunamis (EVIDA) es una herramienta desarrollada 
+                        por la Dirección General Marítima - DIMAR para la protección de las comunidades costeras 
+                        colombianas ante amenazas de tsunamis.
+                    </p>
+                    
+                    <div className="mission-section">
+                        <h3><i className="bi bi-bullseye me-2"></i>Nuestra Misión</h3>
+                        <p>
+                            Proporcionar un sistema confiable de monitoreo sísmico y alerta temprana de tsunamis, 
+                            garantizando la seguridad de las poblaciones costeras mediante información oportuna 
+                            y precisa para la toma de decisiones.
+                        </p>
+                    </div>
+                    
+                    <div className="vision-section">
+                        <h3><i className="bi bi-eye me-2"></i>Nuestra Visión</h3>
+                        <p>
+                            Ser el sistema líder en Colombia para la prevención y mitigación de riesgos 
+                            asociados a tsunamis, integrando tecnología de punta con protocolos efectivos 
+                            de respuesta ante emergencias.
+                        </p>
+                    </div>
+                    
+                    <div className="info-badge">
+                        <i className="bi bi-shield-check me-2"></i>
+                        Vigilancia Continua 24/7
+                    </div>
+                </div>
+            </div>
         </Container>
     );
 }

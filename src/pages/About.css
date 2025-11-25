@@ -1,4 +1,4 @@
-.home-container {
+.about-container {
     min-height: 100vh;
     display: flex;
     align-items: center;
@@ -8,7 +8,7 @@
     overflow-y: auto;
 }
 
-.home-content {
+.about-content {
     text-align: center;
     max-width: 900px;
     margin: 0 auto;
@@ -73,7 +73,7 @@
     font-weight: 600;
 }
 
-.welcome-text {
+.about-text {
     padding: 2rem;
     background: linear-gradient(135deg, #ffffff 0%, #fff5f0 100%);
     border-radius: 16px;
@@ -82,7 +82,7 @@
     border-left: 5px solid #EF9600;
 }
 
-.welcome-text h1 {
+.about-text h1 {
     color: #1C3775;
     font-size: 2.5rem;
     font-weight: 700;
@@ -91,12 +91,45 @@
     text-shadow: 2px 2px 4px rgba(28, 55, 117, 0.1);
 }
 
-.welcome-text .subtitle {
+.about-text .subtitle {
     color: #2a4a8a;
     font-size: 1.2rem;
     line-height: 1.6;
     margin-bottom: 2rem;
     font-weight: 400;
+}
+
+.mission-section,
+.vision-section {
+    text-align: left;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, rgba(28, 55, 117, 0.05) 0%, rgba(0, 156, 222, 0.05) 100%);
+    border-radius: 12px;
+    border-left: 4px solid #009CDE;
+}
+
+.mission-section h3,
+.vision-section h3 {
+    color: #1C3775;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+}
+
+.mission-section h3 i,
+.vision-section h3 i {
+    color: #DC582A;
+}
+
+.mission-section p,
+.vision-section p {
+    color: #2a4a8a;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    margin: 0;
 }
 
 .info-badge {
@@ -110,6 +143,7 @@
     font-size: 1rem;
     box-shadow: 0 4px 12px rgba(220, 88, 42, 0.3);
     transition: all 0.3s ease;
+    margin-top: 1rem;
 }
 
 .info-badge:hover {
@@ -123,7 +157,7 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-    .home-container {
+    .about-container {
         padding: 1rem;
     }
 
@@ -136,16 +170,31 @@
         height: 200px;
     }
 
-    .welcome-text {
+    .about-text {
         padding: 1.5rem;
     }
 
-    .welcome-text h1 {
+    .about-text h1 {
         font-size: 1.8rem;
     }
 
-    .welcome-text .subtitle {
+    .about-text .subtitle {
         font-size: 1rem;
+    }
+
+    .mission-section,
+    .vision-section {
+        padding: 1rem;
+    }
+
+    .mission-section h3,
+    .vision-section h3 {
+        font-size: 1.3rem;
+    }
+
+    .mission-section p,
+    .vision-section p {
+        font-size: 0.95rem;
     }
 
     .info-badge {
@@ -164,11 +213,16 @@
         height: 160px;
     }
 
-    .welcome-text h1 {
+    .about-text h1 {
         font-size: 1.5rem;
     }
 
-    .welcome-text .subtitle {
+    .about-text .subtitle {
         font-size: 0.95rem;
+    }
+
+    .mission-section h3,
+    .vision-section h3 {
+        font-size: 1.2rem;
     }
 }
