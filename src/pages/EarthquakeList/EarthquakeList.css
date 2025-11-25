@@ -208,3 +208,8 @@
 .floating-localidades-card::-webkit-scrollbar-thumb:hover {
     background: #555;
 }
+
+/* Modal ancho personalizado */
+.modal-90w {
+    max-width: 90% !important;
+}

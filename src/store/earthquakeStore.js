@@ -88,7 +88,7 @@ const useEarthquakeStore = create((set, get) => ({
         set({ loading: true, error: null });
         try {
             // Nueva API de sismos en puerto 8080
-            const response = await axios.get(`${EARTHQUAKE_API_URL}/api/test/earthquakes`);
+            const response = await axios.get(`${EARTHQUAKE_API_URL}/api/earthquakes`);
             set({
                 earthquakes: Array.isArray(response.data) ? response.data : [],
                 loading: false,

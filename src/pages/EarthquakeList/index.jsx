@@ -7,7 +7,6 @@ import axios from 'axios';
 import useEarthquakeStore from '../../store/earthquakeStore';
 import datosLC from '../../docs/datosLC.json';
 import * as TileLayers from '../../TileLayers';
-import FloatingLocalidadesCard from '../../components/FloatingLocalidadesCard';
 import dimarLogo from '../../assets/logo.png';
 import './EarthquakeList.css';
 
@@ -83,6 +82,7 @@ function EarthquakeList() {
     const [existingRegionalSimulation, setExistingRegionalSimulation] = useState(null);
     const [simulationProgress, setSimulationProgress] = useState(null); // { localidad, porcentaje }
     const [simulationToast, setSimulationToast] = useState({ show: false, type: '', message: '' });
+    const [showLocalidadesModal, setShowLocalidadesModal] = useState(false);
 
     // Opciones de capas disponibles
     const layerOptions = {
@@ -1270,13 +1270,74 @@ function EarthquakeList() {
                             />
                         </div>
 
-                        {/* Card de Localidades (FloatingLocalidadesCard) */}
-                        {escenario && alturaData && (
-                            <FloatingLocalidadesCard
-                                escenario={escenario}
-                                alturaData={alturaData}
-                                getEstadoColor={getEstadoColor}
-                            />
+                        {/* Card de Simulación Local (Pacífico) */}
+                        {currentEarthquake && currentEarthquake.oceano && (
+                            !(currentEarthquake.oceanoRegion &&
+                                (currentEarthquake.oceanoRegion.toLowerCase() === 'regional' ||
+                                    currentEarthquake.oceanoRegion.toLowerCase() === 'lejano')) && escenario && escenario.simulaciones && escenario.simulaciones.length > 0 ? (
+                                <Card className="mb-3" style={{ border: '2px solid #0d6efd' }}>
+                                    <Card.Header style={{ backgroundColor: '#0d6efd', color: 'white', fontWeight: 'bold' }}>
+                                        🌊 Simulación Local - Pacífico
+                                    </Card.Header>
+                                    <Card.Body>
+                                        {(() => {
+                                            const pacificoSim = escenario.simulaciones.find(
+                                                sim => sim.localidad && sim.localidad.toLowerCase() === 'pacifico'
+                                            );
+                                            
+                                            if (pacificoSim && pacificoSim.imagen) {
+                                                return (
+                                                    <>
+                                                        <div style={{ marginBottom: '12px' }}>
+                                                            <img
+                                                                src={`${API_URL}/img?img=${pacificoSim.imagen}`}
+                                                                alt="Simulación Pacífico"
+                                                                style={{
+                                                                    width: '100%',
+                                                                    height: 'auto',
+                                                                    borderRadius: '4px',
+                                                                    border: '1px solid #ddd',
+                                                                    cursor: 'pointer'
+                                                                }}
+                                                                onClick={(e) => window.open(e.target.src, '_blank')}
+                                                                onError={(e) => {
+                                                                    e.target.style.display = 'none';
+                                                                    e.target.nextElementSibling.style.display = 'block';
+                                                                }}
+                                                            />
+                                                            <p style={{
+                                                                display: 'none',
+                                                                margin: '4px 0',
+                                                                fontSize: '11px',
+                                                                color: '#dc3545',
+                                                                fontStyle: 'italic'
+                                                            }}>
+                                                                ⚠️ No se pudo cargar la imagen
+                                                            </p>
+                                                        </div>
+                                                        
+                                                        <Button
+                                                            variant="primary"
+                                                            size="sm"
+                                                            className="w-100"
+                                                            onClick={() => setShowLocalidadesModal(true)}
+                                                        >
+                                                            <i className="bi bi-eye me-2"></i>
+                                                            Ver más detalles
+                                                        </Button>
+                                                    </>
+                                                );
+                                            } else {
+                                                return (
+                                                    <Alert variant="info" className="mb-0">
+                                                        <small>No hay imagen de simulación disponible para Pacífico.</small>
+                                                    </Alert>
+                                                );
+                                            }
+                                        })()}
+                                    </Card.Body>
+                                </Card>
+                            ) : null
                         )}
 
                         {/* Card de simulación regional o mensaje de no amenaza */}
@@ -1284,19 +1345,21 @@ function EarthquakeList() {
                             !(currentEarthquake.oceanoRegion &&
                                 (currentEarthquake.oceanoRegion.toLowerCase() === 'regional' ||
                                     currentEarthquake.oceanoRegion.toLowerCase() === 'lejano')) ? (
-                                // Mensaje cuando NO es regional/lejano (sismos locales)
-                                <Card className="mb-3" style={{ border: '2px solid #28a745' }}>
-                                    <Card.Header style={{ backgroundColor: '#28a745', color: 'white', fontWeight: 'bold' }}>
-                                        ✅ Información de Tsunami
-                                    </Card.Header>
-                                    <Card.Body>
-                                        <Alert variant="success" className="mb-0">
-                                            <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.5' }}>
-                                                El sismo <strong>{currentEarthquake.id}</strong> reportado por <strong>{currentEarthquake.fuente || currentEarthquake.fuenteApi}</strong> de magnitud <strong>Mw {currentEarthquake.magnitud}</strong> de origen <strong>{currentEarthquake.oceanoRegion || 'local'}</strong> NO representa una amenaza para la costa <strong>{currentEarthquake.oceano}</strong> colombiana teniendo en cuenta el Protocolo Nacional de Detección y Alerta de Tsunamis.
-                                            </p>
-                                        </Alert>
-                                    </Card.Body>
-                                </Card>
+                                // Mensaje cuando NO es regional/lejano (sismos locales) - Solo mostrar si NO hay escenario con simulaciones
+                                !(escenario && escenario.simulaciones && escenario.simulaciones.length > 0) && (
+                                    <Card className="mb-3" style={{ border: '2px solid #28a745' }}>
+                                        <Card.Header style={{ backgroundColor: '#28a745', color: 'white', fontWeight: 'bold' }}>
+                                            ✅ Información de Tsunami
+                                        </Card.Header>
+                                        <Card.Body>
+                                            <Alert variant="success" className="mb-0">
+                                                <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.5' }}>
+                                                    El sismo <strong>{currentEarthquake.id}</strong> reportado por <strong>{currentEarthquake.fuente || currentEarthquake.fuenteApi}</strong> de magnitud <strong>Mw {currentEarthquake.magnitud}</strong> de origen <strong>{currentEarthquake.oceanoRegion || 'local'}</strong> NO representa una amenaza para la costa <strong>{currentEarthquake.oceano}</strong> colombiana teniendo en cuenta el Protocolo Nacional de Detección y Alerta de Tsunamis.
+                                                </p>
+                                            </Alert>
+                                        </Card.Body>
+                                    </Card>
+                                )
                             ) : (
                                 // Card de simulación regional existente
                                 <Card className="mb-3" style={{ border: '2px solid #17a2b8' }}>
@@ -1702,6 +1765,549 @@ function EarthquakeList() {
                                 Ejecutar Simulación
                             </>
                         )}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Modal de Localidades Afectadas */}
+            <Modal show={showLocalidadesModal} onHide={() => setShowLocalidadesModal(false)} size="xl" dialogClassName="modal-90w">
+                <Modal.Header closeButton>
+                    <Modal.Title>Localidades Afectadas</Modal.Title>
+                </Modal.Header>
+                <Modal.Body style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+                    {escenario && escenario.simulaciones && escenario.simulaciones.length > 0 ? (
+                        <>
+                            <Alert variant="info" className="mb-3">
+                                <strong>Escenario:</strong> {escenario.idEscenario || 'N/A'} | 
+                                <strong> Distancia:</strong> {escenario.distancia ? escenario.distancia.toFixed(2) : 'N/A'} km
+                            </Alert>
+
+                            {/* 3-Column Grid Layout */}
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: '30% 25% 45%',
+                                gap: '14px',
+                                marginBottom: '14px'
+                            }}>
+                                {/* LEFT: Pacifico Map Card */}
+                                <div style={{
+                                    backgroundColor: 'white',
+                                    borderRadius: '12px',
+                                    boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
+                                    border: '1px solid #dee2e6',
+                                    padding: '14px',
+                                    maxHeight: '480px',
+                                    display: 'flex',
+                                    flexDirection: 'column'
+                                }}>
+                                    <div style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        marginBottom: '10px',
+                                        paddingBottom: '8px',
+                                        borderBottom: '2px solid #0d6efd'
+                                    }}>
+                                        <div>
+                                            <h6 style={{ margin: 0, fontWeight: '700', color: '#1a1a1a', fontSize: '16px' }}>
+                                                <i className="bi bi-map" style={{ color: '#0d6efd', marginRight: '8px' }}></i>
+                                                Pacífico – Altura máx. ola
+                                            </h6>
+                                            <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#666' }}>
+                                                Simulación de tsunami
+                                            </p>
+                                        </div>
+                                        <button
+                                            style={{
+                                                padding: '6px 12px',
+                                                backgroundColor: '#0d6efd',
+                                                color: 'white',
+                                                border: 'none',
+                                                borderRadius: '6px',
+                                                fontSize: '11px',
+                                                cursor: 'pointer',
+                                                fontWeight: '600'
+                                            }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (escenario.simulaciones[0]?.imagen) {
+                                                    window.open(`${API_URL}/img?img=${escenario.simulaciones[0].imagen}`, '_blank');
+                                                }
+                                            }}
+                                        >
+                                            <i className="bi bi-arrows-fullscreen me-1"></i>
+                                            Ampliar
+                                        </button>
+                                    </div>
+
+                                    <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+                                        {escenario.simulaciones[0]?.imagen && (
+                                            <img
+                                                src={`${API_URL}/img?img=${escenario.simulaciones[0].imagen}`}
+                                                alt="Mapa Pacífico"
+                                                style={{
+                                                    width: '100%',
+                                                    height: 'auto',
+                                                    maxWidth: '100%',
+                                                    objectFit: 'contain',
+                                                    borderRadius: '8px',
+                                                    border: '1px solid #e0e0e0'
+                                                }}
+                                                onError={(e) => { e.target.style.display = 'none'; }}
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* CENTER: Wave Image Card */}
+                                <div style={{
+                                    backgroundColor: 'white',
+                                    borderRadius: '12px',
+                                    boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
+                                    border: '1px solid #dee2e6',
+                                    padding: '14px',
+                                    maxHeight: '480px',
+                                    display: 'flex',
+                                    flexDirection: 'column'
+                                }}>
+                                    <div style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        marginBottom: '10px',
+                                        paddingBottom: '8px',
+                                        borderBottom: '2px solid #0d6efd'
+                                    }}>
+                                        <div>
+                                            <h6 style={{ margin: 0, fontWeight: '700', color: '#1a1a1a', fontSize: '16px' }}>
+                                                <i className="bi bi-water" style={{ color: '#0d6efd', marginRight: '8px' }}></i>
+                                                Ola máxima
+                                            </h6>
+                                            <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#666' }}>
+                                                Visualización de onda
+                                            </p>
+                                        </div>
+                                        <button
+                                            style={{
+                                                padding: '6px 12px',
+                                                backgroundColor: '#0d6efd',
+                                                color: 'white',
+                                                border: 'none',
+                                                borderRadius: '6px',
+                                                fontSize: '11px',
+                                                cursor: 'pointer',
+                                                fontWeight: '600'
+                                            }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (escenario.simulaciones[0]?.imagen) {
+                                                    const imgPath = escenario.simulaciones[0].imagen;
+                                                    const pathParts = imgPath.split('/');
+                                                    if (pathParts.length >= 4) {
+                                                        const basePath = pathParts.slice(0, 4).join('/');
+                                                        const waveUrl = `${API_URL}/img?img=${encodeURIComponent(basePath + '/result/max1.png')}&name=wave`;
+                                                        window.open(waveUrl, '_blank');
+                                                    }
+                                                }
+                                            }}
+                                        >
+                                            <i className="bi bi-arrows-fullscreen me-1"></i>
+                                            Ampliar
+                                        </button>
+                                    </div>
+
+                                    <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+                                        {(() => {
+                                            if (escenario.simulaciones[0]?.imagen) {
+                                                const imgPath = escenario.simulaciones[0].imagen;
+                                                const pathParts = imgPath.split('/');
+                                                if (pathParts.length >= 4) {
+                                                    const basePath = pathParts.slice(0, 4).join('/');
+                                                    const waveUrl = `${API_URL}/img?img=${encodeURIComponent(basePath + '/result/max1.png')}&name=wave`;
+                                                    return (
+                                                        <img
+                                                            src={waveUrl}
+                                                            alt="Ola máxima"
+                                                            style={{
+                                                                width: '100%',
+                                                                height: 'auto',
+                                                                maxWidth: '100%',
+                                                                objectFit: 'contain',
+                                                                borderRadius: '8px',
+                                                                border: '1px solid #e0e0e0'
+                                                            }}
+                                                            onError={(e) => {
+                                                                e.target.style.display = 'none';
+                                                                const sibling = e.target.nextElementSibling;
+                                                                if (sibling) sibling.style.display = 'flex';
+                                                            }}
+                                                        />
+                                                    );
+                                                }
+                                            }
+                                            return (
+                                                <div style={{
+                                                    display: 'flex',
+                                                    justifyContent: 'center',
+                                                    alignItems: 'center',
+                                                    height: '200px',
+                                                    backgroundColor: '#f8f9fa',
+                                                    borderRadius: '8px',
+                                                    color: '#6c757d',
+                                                    fontSize: '12px',
+                                                    textAlign: 'center',
+                                                    padding: '20px'
+                                                }}>
+                                                    <div>
+                                                        <i className="bi bi-image" style={{ fontSize: '32px', display: 'block', marginBottom: '8px' }}></i>
+                                                        No hay ruta de imagen disponible
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
+                                        <div style={{
+                                            display: 'none',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            height: '200px',
+                                            backgroundColor: '#f8f9fa',
+                                            borderRadius: '8px',
+                                            color: '#6c757d',
+                                            fontSize: '12px',
+                                            textAlign: 'center',
+                                            padding: '20px'
+                                        }}>
+                                            <div>
+                                                <i className="bi bi-image" style={{ fontSize: '32px', display: 'block', marginBottom: '8px' }}></i>
+                                                Error al cargar la imagen
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* RIGHT: Table Panel */}
+                                {alturaData && (
+                                    <div style={{
+                                        backgroundColor: 'white',
+                                        borderRadius: '12px',
+                                        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',
+                                        padding: '14px',
+                                        border: '1px solid #e0e0e0',
+                                        maxHeight: '480px',
+                                        display: 'flex',
+                                        flexDirection: 'column'
+                                    }}>
+                                        <div style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '10px',
+                                            marginBottom: '12px',
+                                            paddingBottom: '10px',
+                                            borderBottom: '2px solid #0d6efd'
+                                        }}>
+                                            <div style={{
+                                                width: '36px',
+                                                height: '36px',
+                                                backgroundColor: '#e7f3ff',
+                                                borderRadius: '8px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center'
+                                            }}>
+                                                <i className="bi bi-water" style={{ color: '#0d6efd', fontSize: '20px' }}></i>
+                                            </div>
+                                            <div>
+                                                <h6 style={{ margin: 0, fontWeight: '700', color: '#1a1a1a', fontSize: '15px' }}>
+                                                    Datos de Simulación
+                                                </h6>
+                                                <p style={{ margin: 0, fontSize: '11px', color: '#666' }}>
+                                                    {escenario.simulaciones[0]?.localidad?.charAt(0).toUpperCase() + escenario.simulaciones[0]?.localidad?.slice(1)}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div style={{ flex: 1, overflowY: 'auto', paddingRight: '4px' }}>
+                                            {(() => {
+                                                let data = alturaData;
+                                                if (typeof data === 'string') {
+                                                    try {
+                                                        data = JSON.parse(data);
+                                                    } catch (e) {
+                                                        console.error('Error parsing alturaData:', e);
+                                                        return null;
+                                                    }
+                                                }
+
+                                                const rows = Array.isArray(data) ? data : (data && typeof data === 'object' ? [data] : []);
+
+                                                if (!rows || rows.length === 0) {
+                                                    return (
+                                                        <div style={{
+                                                            padding: '16px',
+                                                            backgroundColor: '#fff3cd',
+                                                            borderRadius: '8px',
+                                                            color: '#856404',
+                                                            fontSize: '12px',
+                                                            textAlign: 'center',
+                                                            border: '1px dashed #ffc107'
+                                                        }}>
+                                                            <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                                                            No hay datos disponibles
+                                                        </div>
+                                                    );
+                                                }
+
+                                                const columns = [
+                                                    { key: 'localidad', label: 'Localidad', align: 'left' },
+                                                    { key: 'altura', label: 'Altura', align: 'right' },
+                                                    { key: 'tiempo', label: 'Tiempo', align: 'right' },
+                                                    { key: 'estado', label: 'Estado', align: 'left' },
+                                                    { key: 'fecha', label: 'Fecha', align: 'left' }
+                                                ];
+
+                                                return (
+                                                    <div style={{ border: '1px solid #e0e0e0', borderRadius: '8px', overflow: 'hidden' }}>
+                                                        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: '12px' }}>
+                                                            <thead style={{ position: 'sticky', top: 0, backgroundColor: '#f1f5ff', zIndex: 1 }}>
+                                                                <tr>
+                                                                    {columns.map(col => (
+                                                                        <th key={col.key} style={{
+                                                                            textAlign: col.align,
+                                                                            padding: '10px 12px',
+                                                                            fontWeight: 700,
+                                                                            color: '#0d47a1',
+                                                                            borderBottom: '2px solid #0d6efd',
+                                                                            fontSize: '11px',
+                                                                            textTransform: 'uppercase',
+                                                                            letterSpacing: '0.5px'
+                                                                        }}>
+                                                                            {col.label}
+                                                                        </th>
+                                                                    ))}
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {rows.map((row, rIdx) => (
+                                                                    <tr key={rIdx} style={{
+                                                                        background: rIdx % 2 === 0 ? '#ffffff' : '#fafbfc',
+                                                                        height: '38px'
+                                                                    }}>
+                                                                        {columns.map(col => {
+                                                                            const value = row?.[col.key];
+                                                                            if (col.key === 'estado') {
+                                                                                const hex = row?.estadoColor;
+                                                                                return (
+                                                                                    <td key={col.key} style={{ padding: '8px 12px', borderBottom: '1px solid #eeeeee', textAlign: col.align }}>
+                                                                                        {hex ? (
+                                                                                            <span style={{
+                                                                                                backgroundColor: hex,
+                                                                                                color: '#fff',
+                                                                                                padding: '3px 8px',
+                                                                                                borderRadius: '999px',
+                                                                                                fontSize: '11px',
+                                                                                                fontWeight: 600,
+                                                                                                whiteSpace: 'nowrap'
+                                                                                            }}>
+                                                                                                {String(value ?? '')}
+                                                                                            </span>
+                                                                                        ) : (
+                                                                                            String(value ?? '')
+                                                                                        )}
+                                                                                    </td>
+                                                                                );
+                                                                            }
+                                                                            return (
+                                                                                <td key={col.key} style={{
+                                                                                    padding: '8px 12px',
+                                                                                    borderBottom: '1px solid #eeeeee',
+                                                                                    textAlign: col.align,
+                                                                                    fontWeight: (col.align === 'right' ? 600 : 400)
+                                                                                }}>
+                                                                                    {typeof value === 'object' ? JSON.stringify(value) : String(value ?? '')}
+                                                                                </td>
+                                                                            );
+                                                                        })}
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                );
+                                            })()}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* BOTTOM: Locality Cards */}
+                            {escenario.simulaciones.length > 1 && (
+                                <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))',
+                                    gap: '14px',
+                                    marginTop: '14px'
+                                }}>
+                                    {escenario.simulaciones.slice(1).map((sim, idx) => (
+                                        <div
+                                            key={idx}
+                                            style={{
+                                                display: 'grid',
+                                                gridTemplateColumns: '200px 1fr auto',
+                                                gap: '12px',
+                                                padding: '12px',
+                                                backgroundColor: '#fff',
+                                                borderRadius: '10px',
+                                                border: '1px solid #dee2e6',
+                                                alignItems: 'center',
+                                                transition: 'all 0.2s ease'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
+                                                e.currentTarget.style.borderColor = '#0d6efd';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.boxShadow = 'none';
+                                                e.currentTarget.style.borderColor = '#dee2e6';
+                                            }}
+                                        >
+                                            {sim.imagen && (
+                                                <div>
+                                                    <img
+                                                        src={`${API_URL}/img?img=${sim.imagen}`}
+                                                        alt={`Simulación ${sim.localidad}`}
+                                                        style={{
+                                                            width: '100%',
+                                                            height: '200px',
+                                                            objectFit: 'cover',
+                                                            borderRadius: '8px',
+                                                            border: '1px solid #e0e0e0',
+                                                            cursor: 'pointer'
+                                                        }}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            window.open(`${API_URL}/img?img=${sim.imagen}`, '_blank');
+                                                        }}
+                                                        onError={(e) => { e.target.style.display = 'none'; }}
+                                                    />
+                                                </div>
+                                            )}
+
+                                            <div>
+                                                <div style={{ marginBottom: '10px' }}>
+                                                    <strong style={{ fontSize: 15, color: '#0d6efd', display: 'block', marginBottom: '4px' }}>
+                                                        <i className="bi bi-geo-alt-fill me-1"></i>
+                                                        {sim.localidad ? sim.localidad.charAt(0).toUpperCase() + sim.localidad.slice(1) : 'N/A'}
+                                                    </strong>
+                                                    {sim.origen && (
+                                                        <span style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: '2px' }}>
+                                                            <i className="bi bi-compass me-1"></i>
+                                                            {sim.origen}
+                                                        </span>
+                                                    )}
+                                                    {sim.caso && (
+                                                        <span style={{ fontSize: 11, color: '#666', display: 'block' }}>
+                                                            <i className="bi bi-folder me-1"></i>
+                                                            Caso: {sim.caso}
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: 12, marginBottom: '10px' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                        <i className="bi bi-water" style={{ color: '#17a2b8', fontSize: 16 }}></i>
+                                                        <div>
+                                                            <strong style={{ color: '#dc3545', fontSize: 14 }}>{sim.altura ?? '—'}m</strong>
+                                                            <div style={{ fontSize: 10, color: '#6c757d' }}>Altura</div>
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                        <i className="bi bi-clock" style={{ color: '#ff9800', fontSize: 16 }}></i>
+                                                        <div>
+                                                            <strong style={{ color: '#ff9800', fontSize: 14 }}>{sim.tiempo ?? '—'}min</strong>
+                                                            <div style={{ fontSize: 10, color: '#6c757d' }}>Tiempo</div>
+                                                        </div>
+                                                    </div>
+                                                    {sim.alturaMax && sim.alturaMax !== '0' && (
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                            <i className="bi bi-water" style={{ color: '#dc3545', fontSize: 16 }}></i>
+                                                            <div>
+                                                                <strong style={{ color: '#dc3545', fontSize: 14 }}>{sim.alturaMax}m</strong>
+                                                                <div style={{ fontSize: 10, color: '#6c757d' }}>Alt. Máx</div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    {sim.tiempoMax && sim.tiempoMax !== '0' && (
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                            <i className="bi bi-clock-fill" style={{ color: '#ff9800', fontSize: 16 }}></i>
+                                                            <div>
+                                                                <strong style={{ color: '#ff9800', fontSize: 14 }}>{sim.tiempoMax}min</strong>
+                                                                <div style={{ fontSize: 10, color: '#6c757d' }}>T. Máx</div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {(sim.fecha || sim.magnitud || sim.profundidad) && (
+                                                    <div style={{
+                                                        padding: '8px',
+                                                        backgroundColor: '#f8f9fa',
+                                                        borderRadius: '6px',
+                                                        fontSize: 11,
+                                                        color: '#495057'
+                                                    }}>
+                                                        {sim.fecha && (
+                                                            <div style={{ marginBottom: '4px' }}>
+                                                                <i className="bi bi-calendar-event me-1"></i>
+                                                                <strong>Fecha:</strong> {sim.fecha}
+                                                            </div>
+                                                        )}
+                                                        {sim.magnitud && (
+                                                            <div style={{ marginBottom: '4px' }}>
+                                                                <i className="bi bi-activity me-1"></i>
+                                                                <strong>Magnitud:</strong> {sim.magnitud}
+                                                            </div>
+                                                        )}
+                                                        {sim.profundidad && (
+                                                            <div>
+                                                                <i className="bi bi-arrow-down me-1"></i>
+                                                                <strong>Profundidad:</strong> {sim.profundidad} km
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {sim.estado && (
+                                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                    <span style={{
+                                                        backgroundColor: getEstadoColor(sim.estado),
+                                                        color: '#fff',
+                                                        padding: '8px 14px',
+                                                        borderRadius: 8,
+                                                        fontSize: 12,
+                                                        fontWeight: 700,
+                                                        whiteSpace: 'nowrap',
+                                                        textAlign: 'center',
+                                                        minWidth: '90px'
+                                                    }}>
+                                                        {sim.estado}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        <Alert variant="warning" className="mb-0">
+                            <p style={{ margin: 0 }}>No hay datos de simulación disponibles para este sismo.</p>
+                        </Alert>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowLocalidadesModal(false)}>
+                        Cerrar
                     </Button>
                 </Modal.Footer>
             </Modal>
