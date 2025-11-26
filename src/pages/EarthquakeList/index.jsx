@@ -83,6 +83,7 @@ function EarthquakeList() {
     const [simulationProgress, setSimulationProgress] = useState(null); // { localidad, porcentaje }
     const [simulationToast, setSimulationToast] = useState({ show: false, type: '', message: '' });
     const [showLocalidadesModal, setShowLocalidadesModal] = useState(false);
+    const [canExecuteSimulation, setCanExecuteSimulation] = useState(false); // Controlar si se puede ejecutar simulación
 
     // Opciones de capas disponibles
     const layerOptions = {
@@ -179,6 +180,11 @@ function EarthquakeList() {
                 if (result && result.idEscenario && result.latitud && result.longitud) {
                     setEscenario(result);
 
+                    // Solo marcar canExecuteSimulation para sismos locales
+                    const isLocal = currentEarthquake.oceanoRegion &&
+                        currentEarthquake.oceanoRegion.toLowerCase() === 'local';
+                    setCanExecuteSimulation(isLocal);
+
                     // Si hay simulaciones y no es old, hacer fetch de altura para el Pacífico
                     if (!result.old && result.simulaciones && result.simulaciones.length > 0) {
                         const pacificoLocalidad = result.simulaciones[0];
@@ -189,11 +195,13 @@ function EarthquakeList() {
                 } else {
                     setEscenario(null);
                     setAlturaData(null);
+                    setCanExecuteSimulation(false);
                 }
             } catch (error) {
                 console.error('❌ Error ejecutando simulación:', error);
                 setEscenario(null);
                 setAlturaData(null);
+                setCanExecuteSimulation(false);
             }
         };
 
@@ -226,7 +234,7 @@ function EarthquakeList() {
                 setExistingRegionalSimulation(data);
             } catch (error) {
                 // Si no existe (404) o cualquier otro error, simplemente no hay simulación
-                console.log('ℹ️ No hay simulación regional existente para este sismo',error);
+                console.log('ℹ️ No hay simulación regional existente para este sismo', error);
                 setExistingRegionalSimulation(null);
             }
         };
@@ -397,16 +405,24 @@ function EarthquakeList() {
 
         setIsExecutingSimulation(true);
         try {
+            // Determinar si es simulación local o regional/lejano
+            const isLocalSimulation = currentEarthquake.oceanoRegion &&
+                currentEarthquake.oceanoRegion.toLowerCase() === 'local';
+
             const simulationPayload = {
                 sismo: {
                     id: currentEarthquake.id,
                     oceano: currentEarthquake.oceano || "",
                     oceanoRegion: currentEarthquake.oceanoRegion || "",
+                    localTime: currentEarthquake.localTime || "",
+                    place: currentEarthquake.place || "",
                     closerTowns: currentEarthquake.closerTowns || "",
                     longitud: currentEarthquake.longitud || currentEarthquake.longitudOperativa,
+                    longitudOperativa: currentEarthquake.longitudOperativa,
                     latitud: currentEarthquake.latitud,
                     magnitud: currentEarthquake.magnitud,
-                    profundidad: currentEarthquake.profundidad
+                    profundidad: currentEarthquake.profundidad,
+                    fuente: currentEarthquake.fuente || currentEarthquake.fuenteApi || ""
                 },
                 fault: {
                     ...faultData,
@@ -416,9 +432,14 @@ function EarthquakeList() {
                 }
             };
 
-            console.log('🚀 Ejecutando simulación personalizada:', simulationPayload);
+            // Seleccionar el endpoint según el tipo de simulación
+            const endpoint = isLocalSimulation
+                ? `${API_URL}/api/temblor/simulacion-local`
+                : `${API_URL}/api/temblor/simulacion-f1`;
 
-            const response = await axios.post(`${API_URL}/api/temblor/simulacion-f1`, simulationPayload);
+            console.log(`🚀 Ejecutando simulación ${isLocalSimulation ? 'local' : 'regional'}:`, simulationPayload);
+
+            const response = await axios.post(endpoint, simulationPayload);
             const result = response.data;
             console.log('✅ Simulación personalizada completada:', result);
 
@@ -426,7 +447,7 @@ function EarthquakeList() {
             setShowSimulationModal(false);
 
             // Mostrar notificación de éxito
-            alert('Simulación ejecutada exitosamente');
+            alert(`Simulación ${isLocalSimulation ? 'local' : 'regional'} ejecutada exitosamente`);
 
             // Opcional: Recargar la simulación automática
             // Puedes agregar lógica adicional aquí si necesitas actualizar algo
@@ -610,6 +631,7 @@ function EarthquakeList() {
                                         </div>
                                     )}
 
+                                    {/* Botón de simulación regional/lejano */}
                                     {currentEarthquake.oceanoRegion &&
                                         (currentEarthquake.oceanoRegion.toLowerCase() === 'regional' ||
                                             currentEarthquake.oceanoRegion.toLowerCase() === 'lejano') && (
@@ -619,7 +641,21 @@ function EarthquakeList() {
                                                     className="btn btn-warning w-100 mb-2"
                                                 >
                                                     <i className="bi bi-cpu me-2"></i>
-                                                    Ejecutar simulación
+                                                    Ejecutar simulación regional
+                                                </button>
+                                            </div>
+                                        )}
+
+                                    {/* Botón de simulación local */}
+                                    {canExecuteSimulation && currentEarthquake.oceano && currentEarthquake.oceanoRegion &&
+                                        currentEarthquake.oceanoRegion.toLowerCase() === 'local' && (
+                                            <div className="mt-2">
+                                                <button
+                                                    onClick={() => setShowSimulationModal(true)}
+                                                    className="btn btn-success w-100 mb-2"
+                                                >
+                                                    <i className="bi bi-cpu me-2"></i>
+                                                    Ejecutar simulación local
                                                 </button>
                                             </div>
                                         )}
@@ -1284,7 +1320,7 @@ function EarthquakeList() {
                                             const pacificoSim = escenario.simulaciones.find(
                                                 sim => sim.localidad && sim.localidad.toLowerCase() === 'pacifico'
                                             );
-                                            
+
                                             if (pacificoSim && pacificoSim.imagen) {
                                                 return (
                                                     <>
@@ -1315,7 +1351,7 @@ function EarthquakeList() {
                                                                 ⚠️ No se pudo cargar la imagen
                                                             </p>
                                                         </div>
-                                                        
+
                                                         <Button
                                                             variant="primary"
                                                             size="sm"
@@ -1652,7 +1688,9 @@ function EarthquakeList() {
             </ToastContainer>            {/* Modal para simulación personalizada */}
             <Modal show={showSimulationModal} onHide={() => setShowSimulationModal(false)} size="lg">
                 <Modal.Header closeButton>
-                    <Modal.Title>Ejecutar Simulación Personalizada</Modal.Title>
+                    <Modal.Title>
+                        Ejecutar Simulación {currentEarthquake?.oceanoRegion?.toLowerCase() === 'local' ? 'Local' : 'Regional'}
+                    </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     {currentEarthquake && (
@@ -1778,7 +1816,7 @@ function EarthquakeList() {
                     {escenario && escenario.simulaciones && escenario.simulaciones.length > 0 ? (
                         <>
                             <Alert variant="info" className="mb-3">
-                                <strong>Escenario:</strong> {escenario.idEscenario || 'N/A'} | 
+                                <strong>Escenario:</strong> {escenario.idEscenario || 'N/A'} |
                                 <strong> Distancia:</strong> {escenario.distancia ? escenario.distancia.toFixed(2) : 'N/A'} km
                             </Alert>
 
